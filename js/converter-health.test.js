@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import handler from './health.js';
+import handler from '../api/converter/health.js';
 
 function createResponse() {
   return {
