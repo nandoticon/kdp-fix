@@ -30,31 +30,40 @@
     }
 }
 
-/* Give the workspace a proportional layout instead of a fixed narrow upload rail. */
+/* Keep the primary task full-width on large screens instead of reserving space for empty results. */
 @media (min-width: 1800px) {
     .container {
         display: grid;
-        grid-template-columns: minmax(640px, 0.9fr) minmax(0, 1.1fr);
+        grid-template-columns: minmax(0, 1fr);
         grid-template-areas:
-            "header header"
-            "privacy privacy"
-            "upload results"
-            "features features";
-        gap: clamp(1.5rem, 2vw, 3rem);
-        align-items: start;
+            "header"
+            "privacy"
+            "upload"
+            "results"
+            "features";
+        gap: clamp(1rem, 1.5vw, 2rem);
     }
 
     header {
         grid-area: header;
+        margin-bottom: 0;
+        text-align: left;
+    }
+
+    header .description {
+        max-width: 720px;
+        margin: 0;
     }
 
     .privacy-notice {
         grid-area: privacy;
+        margin: 0;
     }
 
     .upload-section {
         grid-area: upload;
         min-width: 0;
+        margin: 0;
     }
 
     #results-panel {

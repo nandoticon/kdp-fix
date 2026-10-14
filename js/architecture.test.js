@@ -86,6 +86,7 @@ test('light theme defines readable controls and inputs instead of retaining dark
 test('converter settings use the app glass-card form system and responsive disclosure', async () => {
     const formStyles = await readFile(new URL('../styles/forms.css', import.meta.url), 'utf8');
     const layoutStyles = await readFile(new URL('../styles/layout.css', import.meta.url), 'utf8');
+    const resultStyles = await readFile(new URL('../styles/results.css', import.meta.url), 'utf8');
     const workspace = await readFile(new URL('../partials/workspace.html', import.meta.url), 'utf8');
     const app = await readFile(new URL('./app.js', import.meta.url), 'utf8');
 
@@ -96,10 +97,13 @@ test('converter settings use the app glass-card form system and responsive discl
     assert.match(formStyles, /\.conversion-select:focus-visible/);
     assert.match(formStyles, /@media \(max-width:\s*520px\)/);
     assert.match(formStyles, /\.drop-zone\[aria-disabled="true"\]/);
-    assert.match(layoutStyles, /grid-template-columns:\s*minmax\(640px,\s*0\.9fr\)\s+minmax\(0,\s*1\.1fr\)/);
+    assert.match(layoutStyles, /grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+    assert.match(layoutStyles, /"upload"\s+"results"\s+"features"/);
+    assert.match(layoutStyles, /header \.description\s*\{[^}]*margin:\s*0/s);
     assert.doesNotMatch(layoutStyles, /\.upload-section\s*\{[^}]*position:\s*sticky/s);
+    assert.match(resultStyles, /#main_status:empty\s*\{\s*display:\s*none/s);
     assert.match(formStyles, /\.drop-zone\s*\{[^}]*background:\s*var\(--workspace-surface\)/s);
-    assert.match(formStyles, /@media \(min-width:\s*1800px\)[\s\S]*?\.drop-zone\s*\{[^}]*min-height:\s*clamp/);
+    assert.match(formStyles, /@media \(min-width:\s*1800px\)[\s\S]*?\.drop-zone\s*\{[^}]*min-height:\s*clamp\(320px,\s*18vw,\s*480px\)/);
     assert.match(formStyles, /@media \(max-width:\s*768px\)[\s\S]*?\.drop-zone\s*\{[^}]*min-height:\s*220px/);
     assert.match(app, /conversion_unsupported_files/);
     assert.match(app, /finally\s*\{[\s\S]*?fileInput\.disabled = false/);

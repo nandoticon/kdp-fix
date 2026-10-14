@@ -8,6 +8,10 @@
     animation: fadeIn 0.3s ease;
 }
 
+#main_status:empty {
+    display: none;
+}
+
 #output {
     display: grid;
     grid-template-columns: 1fr;
