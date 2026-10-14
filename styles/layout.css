@@ -17,33 +17,30 @@
 /* Large display optimization */
 @media (min-width: 2000px) {
     .container {
-        max-width: 2000px;
-        /* Even wider for ultra-wide displays */
+        max-width: 2200px;
         padding-left: calc(3rem + var(--safe-left));
         padding-right: calc(3rem + var(--safe-right));
         padding-top: calc(1.5rem + var(--safe-top));
-        /* Reduced top padding */
     }
 }
 
 @media (min-width: 2560px) {
     .container {
-        max-width: 2200px;
-        /* Maximum for 4K displays */
+        max-width: 2560px;
     }
 }
 
-/* 2-COLUMN LAYOUT FOR 4K DISPLAYS */
+/* Give the workspace a proportional layout instead of a fixed narrow upload rail. */
 @media (min-width: 1800px) {
     .container {
         display: grid;
-        grid-template-columns: 500px 1fr;
+        grid-template-columns: minmax(640px, 0.9fr) minmax(0, 1.1fr);
         grid-template-areas:
             "header header"
             "privacy privacy"
             "upload results"
             "features features";
-        gap: 2rem;
+        gap: clamp(1.5rem, 2vw, 3rem);
         align-items: start;
     }
 
@@ -57,12 +54,12 @@
 
     .upload-section {
         grid-area: upload;
-        position: sticky;
-        top: 2rem;
+        min-width: 0;
     }
 
     #results-panel {
         grid-area: results;
+        min-width: 0;
     }
 
     .features {
@@ -139,7 +136,6 @@ h1 {
     .features {
         grid-template-columns: repeat(4, 1fr);
         margin: 1rem 0;
-        /* Even smaller margin on large screens */
     }
 }
 

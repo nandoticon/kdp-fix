@@ -5,6 +5,7 @@
     --apple-bg: #000000;
     --apple-glass: rgba(28, 28, 30, 0.7);
     --apple-glass-heavy: rgba(28, 28, 30, 0.9);
+    --workspace-surface: #1c1c1e;
     --apple-card-bg: var(--apple-glass);
     --apple-blue: #007AFF;
     --apple-blue-rgb: 0, 122, 255;
@@ -80,6 +81,7 @@ body.light-mode {
     --apple-bg: #f5f5f7;
     --apple-glass: rgba(255, 255, 255, 0.8);
     --apple-glass-heavy: rgba(255, 255, 255, 0.95);
+    --workspace-surface: #ffffff;
     --apple-card-bg: var(--apple-glass);
     --apple-card-border: rgba(0, 0, 0, 0.1);
     --text-primary: #1d1d1f;
