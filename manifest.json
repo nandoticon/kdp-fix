@@ -1,7 +1,7 @@
 {
   "name": "Kindle EPUB Fix",
   "short_name": "KindleFix",
-  "description": "Premium EPUB fixer for Amazon Send-to-Kindle.",
+  "description": "Repair EPUBs offline and optionally convert EPUB, MOBI, and AZW3 formats.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",

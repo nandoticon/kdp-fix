@@ -142,3 +142,45 @@ export function buildErrorCard(name, message, t) {
   card.append(heading, detail);
   return card;
 }
+
+export function buildConvertedFileCard({ filename, downloadUrl, t }) {
+  const card = document.createElement('div');
+  card.className = 'result-card';
+
+  const heading = document.createElement('h3');
+  heading.textContent = filename;
+  card.appendChild(heading);
+
+  const actions = document.createElement('div');
+  actions.className = 'result-actions';
+  const downloadLink = document.createElement('a');
+  downloadLink.className = 'dl-btn';
+  downloadLink.href = downloadUrl;
+  downloadLink.download = filename;
+  const icon = document.createElement('i');
+  icon.setAttribute('data-lucide', 'download');
+  icon.setAttribute('aria-hidden', 'true');
+  const label = document.createElement('span');
+  label.textContent = t('download');
+  downloadLink.append(icon, label);
+  actions.appendChild(downloadLink);
+  card.appendChild(actions);
+  return card;
+}
+
+export function buildConversionErrorCard(filename, message) {
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.style.borderColor = '#FF3B30';
+  const heading = document.createElement('h3');
+  heading.style.color = '#FF3B30';
+  const icon = document.createElement('i');
+  icon.setAttribute('data-lucide', 'circle-alert');
+  icon.setAttribute('aria-hidden', 'true');
+  heading.append(icon, document.createTextNode(` ${filename}`));
+  const detail = document.createElement('p');
+  detail.style.color = 'var(--text-secondary)';
+  detail.textContent = message;
+  card.append(heading, detail);
+  return card;
+}

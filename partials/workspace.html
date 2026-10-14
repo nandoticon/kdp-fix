@@ -6,11 +6,29 @@
                     Optional conversion is unavailable right now. EPUB repair still works offline.
                 </span>
             </div>
+            <div class="conversion-controls">
+                <label for="processing-mode" data-i18n="processing_mode_label">Task</label>
+                <select id="processing-mode">
+                    <option value="repair" data-i18n="repair_mode">Repair EPUB offline</option>
+                    <option value="convert" data-i18n="convert_mode">Convert ebook format (online)</option>
+                </select>
+                <div id="conversion-options" hidden>
+                    <label for="conversion-target" data-i18n="conversion_target_label">Convert to</label>
+                    <select id="conversion-target">
+                        <option value="epub">EPUB</option>
+                        <option value="mobi">MOBI</option>
+                        <option value="azw3">AZW3</option>
+                    </select>
+                    <p class="conversion-upload-notice" data-i18n="conversion_upload_notice">
+                        Conversion uploads the selected book to Vercel for processing. Files up to 4 MiB; temporary files are deleted after conversion.
+                    </p>
+                </div>
+            </div>
             <div class="drop-zone" id="drop-zone">
                 <i class="upload-icon" data-lucide="cloud-upload" aria-hidden="true"></i>
                 <p data-i18n="upload">Drag & Drop EPUB files here</p>
                 <span data-i18n="upload_hint">or click to browse your computer</span>
-                <input id="file" type="file" accept=".epub" multiple>
+                <input id="file" type="file" accept=".epub,.mobi,.azw3" multiple>
             </div>
 
             <!-- BULK METADATA -->

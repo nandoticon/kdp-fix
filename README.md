@@ -1,6 +1,6 @@
-# Kindle EPUB Fix (v2.2)
+# Kindle EPUB Fix (v2.3)
 
-A browser-based tool for checking and repairing EPUBs for Amazon Send to Kindle. EPUBs are processed locally in your browser; book content is not uploaded.
+A browser-based tool for checking and repairing EPUBs for Amazon Send to Kindle, with optional Vercel-hosted ebook conversion.
 
 ## Features
 
@@ -17,7 +17,9 @@ A browser-based tool for checking and repairing EPUBs for Amazon Send to Kindle.
 - English, Portuguese, and Spanish UI; light/dark themes; installable PWA support.
 - Local SVG/PNG favicon, Apple touch icon, and installable PWA icons cached for offline use.
 - Lucide icons identify interface actions and optimization statuses; the Lucide runtime is version-pinned and cached by the service worker.
-- EPUB repair remains browser-based and available offline. The Vercel `/api/converter/health` function explicitly reports conversion as unavailable until a real MOBI/AZW3 conversion engine is deployed; this status check never blocks EPUB repair.
+- EPUB repair remains browser-based and available offline.
+- Optional conversion runs Calibre in a Vercel container and supports conversions between EPUB, MOBI, and AZW3. DRM-protected books may not convert.
+- Conversion is opt-in and uploads the selected book to Vercel. Upload and converted output are limited to 4 MiB; files are held in temporary storage and deleted after the request. Conversion uses metered Vercel container compute.
 
 Language detection is intentionally conservative: when the package language is missing or invalid, the tool reports that it could not confidently identify the language rather than guessing and changing the book metadata. Missing image descriptions are reported without adding generic, misleading alt text. Chapter splitting and Kindle PageFlip metadata are not implemented and are reported as skipped.
 
@@ -29,7 +31,7 @@ Serve the project over HTTP (ES modules and service workers require a server):
 python -m http.server 8000
 ```
 
-Then open <http://localhost:8000>. On the first online visit the app loads its browser libraries from public CDNs; after they are cached by the service worker, the app can work offline while the browser retains its cache.
+Then open <http://localhost:8000>. The local static server supports offline EPUB repair, but not the Vercel-only conversion API. On the first online visit the app loads its browser libraries from public CDNs; after they are cached by the service worker, the app can work offline while the browser retains its cache.
 
 ## Tests
 
@@ -39,11 +41,18 @@ Run the regression tests with Node.js 18 or newer:
 npm test
 ```
 
+Run the converter validation tests with Python 3:
+
+```bash
+python -m unittest discover -s backend -p "test_*.py"
+```
+
 ## Source layout
 
 - `js/app.js` coordinates file processing and user actions; `js/ui.js` renders statuses and result cards.
 - `js/preview.js` builds the sandboxed EPUB preview; `js/epub-engine.js` and `js/utils.js` contain EPUB handling.
-- `js/converter-availability.js` checks the optional converter separately; the Vercel health function does not perform conversion. The first planned conversion targets are MOBI and AZW3 (KFX is out of scope).
+- `js/converter-availability.js` checks the optional Vercel converter separately; `backend/` contains the Calibre-backed conversion service and request validation (KFX is out of scope).
+- `Dockerfile.vercel` packages the static app and converter service in a Vercel Container Function.
 - `js/constants.js` assembles the English, Portuguese, and Spanish dictionaries from `js/i18n/`.
 - `styles.css` loads the focused stylesheets in `styles/`.
 - `index.html` is the page shell; `partials/` contains its UI sections, assembled by `js/bootstrap.js`.
@@ -51,4 +60,4 @@ npm test
 
 ## Privacy
 
-EPUB files remain in browser memory and are not sent to a server. The app does load its UI libraries from CDNs on first use; book files are never included in those requests.
+EPUB repair files remain in browser memory and are not sent to a server. If conversion mode is chosen, the selected book is sent to Vercel, processed in a temporary directory, and not persisted. Conversion is limited to 4 MiB input and output. UI libraries load from public CDNs on first use; book files are never included in those requests.

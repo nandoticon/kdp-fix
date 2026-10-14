@@ -91,6 +91,33 @@ input[type="text"] {
     outline: none;
 }
 
+.conversion-controls {
+    max-width: 520px;
+    margin: 0 auto 1.25rem;
+}
+
+.conversion-controls select {
+    width: 100%;
+    margin-bottom: 0.8rem;
+    padding: 0.8rem 1rem;
+    color: var(--input-text);
+    background: var(--input-bg);
+    border: 1px solid var(--apple-card-border);
+    border-radius: 12px;
+    font: inherit;
+}
+
+.conversion-upload-notice {
+    margin: 0 0 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+#conversion-options[hidden] {
+    display: none;
+}
+
 input[type="text"]:focus {
     border-color: var(--apple-blue);
     background: var(--input-focus-bg);

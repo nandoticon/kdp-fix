@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kdp-fix-v6';
+const CACHE_NAME = 'kdp-fix-v7';
 const APP_BASE = new URL('.', self.registration.scope);
 const LOCAL_ASSETS = [
     '',

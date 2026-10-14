@@ -1,5 +1,12 @@
 # Version history
 
+## v2.3 — October 14, 2026
+
+- Add optional conversions between EPUB, MOBI, and AZW3 using Calibre in a Vercel container.
+- Keep EPUB repair local and offline; explicitly disclose that conversion uploads the selected book to Vercel.
+- Limit conversion input and output to 4 MiB, cap conversion time, validate file signatures, and remove temporary files after each request.
+- Add conversion mode, target selection, per-file download results, and localized English, Portuguese, and Spanish UI.
+
 ## v2.2 — October 14, 2026
 
 - Add a clear-results action that closes previews, revokes cover object URLs, and releases processed book data.

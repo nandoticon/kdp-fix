@@ -1,0 +1,21 @@
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends calibre ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY backend/converter.py backend/server.py ./
+RUN mkdir -p /app/site
+COPY index.html styles.css script.js manifest.json sw.js /app/site/
+COPY js /app/site/js
+COPY styles /app/site/styles
+COPY partials /app/site/partials
+COPY icons /app/site/icons
+
+EXPOSE 80
+CMD ["python3", "server.py"]

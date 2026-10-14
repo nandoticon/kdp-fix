@@ -51,12 +51,19 @@ test('optional converter health requests bypass service-worker caching', async (
     const checker = await readFile(new URL('./converter-availability.js', import.meta.url), 'utf8');
     const app = await readFile(new URL('./app.js', import.meta.url), 'utf8');
     const partials = await readFile(new URL('../partials/workspace.html', import.meta.url), 'utf8');
+    const converter = await readFile(new URL('../backend/server.py', import.meta.url), 'utf8');
+    const dockerfile = await readFile(new URL('../Dockerfile.vercel', import.meta.url), 'utf8');
 
     assert.match(serviceWorker, /pathname\.startsWith\(converterApiPath\)\) return/);
     assert.match(checker, /cache:\s*'no-store'/);
     assert.match(app, /showConverterAvailability\(/);
+    assert.match(app, /handleConversionFiles\(/);
     assert.match(partials, /id="conversion-status"/);
     assert.match(partials, /EPUB repair still works offline/);
+    assert.match(partials, /id="processing-mode"/);
+    assert.match(converter, /\/api\/converter\/health/);
+    assert.match(converter, /\/api\/converter\/convert/);
+    assert.match(dockerfile, /apt-get install .*calibre/s);
     assert.ok(serviceWorker.includes("'js/converter-availability.js'"), 'Converter status module is not cached offline');
     assert.match(app, /void showConverterAvailability\(/, 'Converter status check must not block EPUB app startup');
 });

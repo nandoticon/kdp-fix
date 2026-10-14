@@ -1,5 +1,5 @@
 const HEALTH_ENDPOINT = new URL('../api/converter/health', import.meta.url);
-const CHECK_TIMEOUT_MS = 2500;
+const CHECK_TIMEOUT_MS = 10000;
 
 export async function isConverterAvailable({
   fetchImpl = fetch,

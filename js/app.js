@@ -1,8 +1,8 @@
 import { EPUBBook } from './epub-engine.js';
 import { I18N } from './constants.js';
-import { buildErrorCard as renderErrorCard, buildOutputCard, refreshIcons, setModalState, setStatus as updateStatus } from './ui.js';
+import { buildConversionErrorCard, buildConvertedFileCard, buildErrorCard as renderErrorCard, buildOutputCard, refreshIcons, setModalState, setStatus as updateStatus } from './ui.js';
 import { makePreviewDocument } from './preview.js';
-import { showConverterAvailability } from './converter-availability.js';
+import { isConverterAvailable, showConverterAvailability } from './converter-availability.js';
 
 let currentLang = ['en', 'pt', 'es'].includes(localStorage.getItem('kdp_lang'))
   ? localStorage.getItem('kdp_lang')
@@ -11,10 +11,13 @@ let epubInstances = [];
 let filenames = [];
 let dlfilenames = [];
 let resultCards = [];
+let convertedFiles = [];
 let currentEditIdx = null;
 let processingRun = 0;
 let isProcessing = false;
 let isDownloadingAll = false;
+let converterAvailable = false;
+const MAX_CONVERSION_BATCH = 5;
 
 const outputDiv = document.getElementById('output');
 const mainStatusDiv = document.getElementById('main_status');
@@ -24,11 +27,14 @@ const resultsToolbar = document.getElementById('results-toolbar');
 const btnDlAll = document.getElementById('btnDlAll');
 const btnClearResults = document.getElementById('btnClearResults');
 const bulkEditContainer = document.getElementById('bulk-edit-container');
+const processingMode = document.getElementById('processing-mode');
+const conversionOptions = document.getElementById('conversion-options');
 
-function t(key, n, errors) {
+function t(key, n, errors, total) {
   let text = I18N[currentLang][key] || I18N.en[key] || key;
   if (n !== undefined) text = text.replaceAll('{n}', n);
   if (errors !== undefined) text = text.replaceAll('{errors}', errors);
+  if (total !== undefined) text = text.replaceAll('{total}', total);
   return text;
 }
 
@@ -60,7 +66,18 @@ function applyI18N() {
   });
 }
 
+function updateProcessingMode() {
+  const converting = processingMode.value === 'convert';
+  conversionOptions.hidden = !converting;
+  fileInput.accept = converting ? '.epub,.mobi,.azw3' : '.epub';
+  dropZone.querySelector('p').textContent = t(converting ? 'convert_upload' : 'upload');
+}
+
 async function handleFiles(files) {
+  if (processingMode.value === 'convert') {
+    await handleConversionFiles(files);
+    return;
+  }
   const fileArray = Array.from(files).filter(file => /\.epub$/i.test(file.name));
   if (!fileArray.length || isProcessing || isDownloadingAll) return;
 
@@ -73,6 +90,8 @@ async function handleFiles(files) {
   epubInstances.forEach(epub => {
     if (epub.coverUrl) URL.revokeObjectURL(epub.coverUrl);
   });
+  convertedFiles.forEach(url => URL.revokeObjectURL(url));
+  convertedFiles = [];
   setStatus(t('processing'));
   outputDiv.replaceChildren();
   resultsToolbar.style.display = 'none';
@@ -155,6 +174,128 @@ async function handleFiles(files) {
   console.log(`Processed ${fileArray.length} files in ${(performance.now() - startTime).toFixed(2)}ms`);
 }
 
+function filenameFromResponse(response, originalName, target) {
+  const disposition = response.headers.get('Content-Disposition') || '';
+  const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded);
+    } catch {
+      // Use a safe fallback when the response filename is malformed.
+    }
+  }
+  return `${originalName.replace(/\.[^.]+$/, '')}.${target}`;
+}
+
+async function convertFile(file, target) {
+  const endpoint = new URL('/api/converter/convert', window.location.origin);
+  endpoint.searchParams.set('target', target);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 210_000);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'X-Source-Filename': encodeURIComponent(file.name)
+      },
+      body: file,
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.error || t('conversion_failed'));
+    }
+    return {
+      name: filenameFromResponse(response, file.name, target),
+      blob: await response.blob()
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function handleConversionFiles(files) {
+  const fileArray = Array.from(files).filter(file => /\.(epub|mobi|azw3)$/i.test(file.name));
+  if (!fileArray.length) {
+    setStatus(t('conversion_invalid_file'), 'error');
+    return;
+  }
+  if (isProcessing || isDownloadingAll) return;
+  if (fileArray.length > MAX_CONVERSION_BATCH) {
+    setStatus(t('conversion_batch_too_large'), 'error');
+    return;
+  }
+  if (fileArray.some(file => file.size > 4 * 1024 * 1024)) {
+    setStatus(t('conversion_file_too_large'), 'error');
+    return;
+  }
+
+  if (!converterAvailable) {
+    converterAvailable = await isConverterAvailable();
+    const statusElement = document.getElementById('conversion-status');
+    statusElement.hidden = converterAvailable;
+    if (!converterAvailable) {
+      statusElement.querySelector('[data-converter-message]').textContent = t('conversion_unavailable');
+      refreshIcons();
+      setStatus(t('conversion_unavailable_action'), 'error');
+      return;
+    }
+  }
+
+  isProcessing = true;
+  const run = ++processingRun;
+  const target = document.getElementById('conversion-target').value;
+  fileInput.disabled = true;
+  dropZone.setAttribute('aria-disabled', 'true');
+  closeMetadataModal();
+  closeReaderModal();
+  epubInstances.forEach(epub => {
+    if (epub.coverUrl) URL.revokeObjectURL(epub.coverUrl);
+  });
+  convertedFiles.forEach(url => URL.revokeObjectURL(url));
+  epubInstances = [];
+  filenames = [];
+  dlfilenames = [];
+  resultCards = [];
+  convertedFiles = [];
+  outputDiv.replaceChildren();
+  resultsToolbar.style.display = 'none';
+  btnDlAll.style.display = 'none';
+  btnClearResults.style.display = 'none';
+  bulkEditContainer.style.display = 'none';
+
+  setStatus(t('processing'));
+  let failureCount = 0;
+  for (let index = 0; index < fileArray.length; index++) {
+    const file = fileArray[index];
+    setStatus(t('conversion_processing', index + 1, undefined, fileArray.length));
+    try {
+      const sourceFormat = file.name.split('.').pop().toLowerCase();
+      if (sourceFormat === target) throw new Error(t('conversion_same_format'));
+      const converted = await convertFile(file, target);
+      if (run !== processingRun) return;
+      const url = URL.createObjectURL(converted.blob);
+      convertedFiles.push(url);
+      const card = buildConvertedFileCard({ filename: converted.name, downloadUrl: url, t });
+      outputDiv.appendChild(card);
+    } catch (error) {
+      console.error('E-book conversion failed:', file.name, error);
+      failureCount++;
+      outputDiv.appendChild(buildConversionErrorCard(file.name, error.message || t('conversion_failed')));
+    }
+  }
+
+  isProcessing = false;
+  fileInput.disabled = false;
+  dropZone.removeAttribute('aria-disabled');
+  refreshIcons();
+  setStatus(failureCount ? t('done_with_errors', fileArray.length, failureCount) : t('conversion_complete'), failureCount ? 'warning' : 'success');
+  resultsToolbar.style.display = 'flex';
+  btnClearResults.style.display = 'inline-flex';
+}
+
 function clearResults() {
   if (isProcessing || isDownloadingAll) return;
   closeMetadataModal();
@@ -162,7 +303,9 @@ function clearResults() {
   epubInstances.forEach(epub => {
     if (epub.coverUrl) URL.revokeObjectURL(epub.coverUrl);
   });
+  convertedFiles.forEach(url => URL.revokeObjectURL(url));
   epubInstances = [];
+  convertedFiles = [];
   filenames = [];
   dlfilenames = [];
   resultCards = [];
@@ -283,6 +426,10 @@ fileInput.addEventListener('change', event => {
   fileInput.value = '';
 });
 
+processingMode.addEventListener('change', () => {
+  updateProcessingMode();
+});
+
 dropZone.addEventListener('dragover', event => {
   event.preventDefault();
   dropZone.classList.add('drag-over');
@@ -344,6 +491,7 @@ document.getElementById('lang-toggle').addEventListener('click', () => {
   currentLang = currentLang === 'en' ? 'pt' : currentLang === 'pt' ? 'es' : 'en';
   localStorage.setItem('kdp_lang', currentLang);
   applyI18N();
+  updateProcessingMode();
   resultCards.forEach((_, idx) => {
     const card = buildOutputHTML(idx);
     resultCards[idx].replaceWith(card);
@@ -376,9 +524,12 @@ if (localStorage.getItem('kdp_theme') === 'light') {
   document.querySelector('#theme-toggle [data-lucide]').setAttribute('data-lucide', 'sun');
 }
 applyI18N();
+updateProcessingMode();
 refreshIcons();
 void showConverterAvailability({
   t,
   refreshIcons,
   statusElement: document.getElementById('conversion-status')
+}).then(available => {
+  converterAvailable = available;
 });
