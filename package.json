@@ -4,7 +4,7 @@
   "description": "Amazon Send-to-Kindle service has accepted EPUB, however, for historical reason\r it still assumes ISO-8859-1 encoding if no encoding is specified. This creates weird formatting errors for special characters.",
   "main": "script.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test"
   },
   "repository": {
     "type": "git",
@@ -13,7 +13,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/nandoticon/kdp-fix/issues"
   },

@@ -44,9 +44,8 @@
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-            <span data-i18n="privacy"><strong>Privacy:</strong> All processing happens in your browser. Your files are
-                never
-                uploaded.</span>
+            <span><strong data-i18n="privacy_label">Privacy:</strong> <span data-i18n="privacy_text">All processing
+                    happens in your browser. Your files are never uploaded.</span></span>
         </div>
 
         <!-- UPLOAD SECTION -->
@@ -79,12 +78,12 @@
                         style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--apple-card-border); background: var(--apple-card-bg); color: var(--text-primary);">
                 </div>
             </div>
-            <button class="dl-btn btn-secondary" style="margin-top: 1rem; width: 100%;"
-                onclick="window.applyBulkMetadata()" data-i18n="save">Apply to All</button>
+            <button id="apply-bulk-metadata" class="dl-btn btn-secondary" style="margin-top: 1rem; width: 100%;"
+                data-i18n="apply_bulk">Apply to All</button>
         </div>
 
         <!-- STATUS & DOWNLOAD ALL -->
-        <div id="main_status"></div>
+        <div id="main_status" role="status" aria-live="polite"></div>
         <button id="btnDlAll" class="dl-btn" style="display:none; margin-bottom: 2rem; width: 100%;">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2">
@@ -154,9 +153,10 @@
     </div>
 
     <!-- MODALS -->
-    <div id="modal-metadata" class="modal">
+    <div id="modal-metadata" class="modal" role="dialog" aria-modal="true" aria-hidden="true"
+        aria-labelledby="metadata-dialog-title">
         <div class="modal-content">
-            <h2 data-i18n="edit_meta">Edit Metadata</h2>
+            <h2 id="metadata-dialog-title" data-i18n="edit_meta">Edit Metadata</h2>
             <div class="form-group">
                 <label data-i18n="meta_title">Title</label>
                 <input id="edit-title" type="text">
@@ -174,17 +174,17 @@
                 <input id="edit-language" type="text">
             </div>
             <div class="modal-actions">
-                <button class="dl-btn" onclick="window.saveMetadataChanges()" data-i18n="save">Save</button>
-                <button class="dl-btn btn-secondary" onclick="window.closeMetadataModal()"
-                    data-i18n="cancel">Cancel</button>
+                <button id="metadata-save" class="dl-btn" data-i18n="save">Save</button>
+                <button id="metadata-cancel" class="dl-btn btn-secondary" data-i18n="cancel">Cancel</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-reader" class="modal">
+    <div id="modal-reader" class="modal" role="dialog" aria-modal="true" aria-hidden="true"
+        aria-label="EPUB preview">
         <div class="modal-content modal-reader">
-            <button class="modal-close" onclick="window.closeReaderModal()">×</button>
-            <iframe id="reader-frame"></iframe>
+            <button id="reader-close" class="modal-close" aria-label="Close preview">×</button>
+            <iframe id="reader-frame" title="EPUB preview" sandbox="" referrerpolicy="no-referrer"></iframe>
         </div>
     </div>
 
