@@ -3,9 +3,30 @@ import {
     normalizeEpubPath,
     relativeEpubPath,
     resolveEpubPath,
+    decodeEpubText,
+    normalizeTextEncoding,
     simplifyLanguage,
+    sniffImageMimeType,
     perfomCompression
 } from './utils.js';
+
+const DC_NAMESPACE = 'http://purl.org/dc/elements/1.1/';
+const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/';
+const MAX_ARCHIVE_ENTRIES = 20000;
+const MAX_UNCOMPRESSED_BYTES = 512 * 1024 * 1024;
+
+function elementsByLocalName(root, localName) {
+    return Array.from(root.getElementsByTagName('*')).filter(element => element.localName === localName);
+}
+
+function firstByLocalName(root, localName) {
+    return elementsByLocalName(root, localName)[0] || null;
+}
+
+function getTextByLocalName(root, localName) {
+    return elementsByLocalName(root, localName)
+        .find(element => element.namespaceURI === DC_NAMESPACE)?.textContent?.trim() || '';
+}
 
 export class EPUBBook {
     constructor() {
@@ -14,8 +35,8 @@ export class EPUBBook {
         this.opfPath = '';
         this.coverUrl = null;
         this.coverPath = '';
-        this.files = {};
-        this.binary_files = {};
+        this.files = Object.create(null);
+        this.binary_files = Object.create(null);
     }
 
     addOptimization(id, status, payload = null) {
@@ -24,46 +45,61 @@ export class EPUBBook {
 
     async readEPUB(blob) {
         const reader = new zip.ZipReader(new zip.BlobReader(blob));
-        const entries = await reader.getEntries();
-
-        for (const entry of entries) {
-            const filename = entry.filename;
-            if (entry.directory) continue;
-            const ext = filename.split('.').pop().toLowerCase();
-            if (filename === 'mimetype' || ['html', 'xhtml', 'htm', 'xml', 'svg', 'css', 'opf', 'ncx', 'txt'].includes(ext)) {
-                this.files[filename] = await entry.getData(new zip.TextWriter('utf-8'));
-            } else {
-                this.binary_files[filename] = await entry.getData(new zip.Uint8ArrayWriter());
+        try {
+            const entries = await reader.getEntries();
+            if (entries.length > MAX_ARCHIVE_ENTRIES) {
+                throw new Error(`EPUB contains too many archive entries (limit: ${MAX_ARCHIVE_ENTRIES})`);
             }
+
+            let totalUncompressedBytes = 0;
+            for (const entry of entries) {
+                const filename = entry.filename;
+                if (entry.directory) continue;
+                const uncompressedSize = Number(entry.uncompressedSize);
+                if (Number.isFinite(uncompressedSize) && uncompressedSize > 0) {
+                    totalUncompressedBytes += uncompressedSize;
+                    if (totalUncompressedBytes > MAX_UNCOMPRESSED_BYTES) {
+                        throw new Error('EPUB expands beyond the 512 MiB processing limit');
+                    }
+                }
+                const ext = filename.split('.').pop().toLowerCase();
+                if (filename === 'mimetype' || ['html', 'xhtml', 'htm', 'xml', 'svg', 'css', 'opf', 'ncx', 'txt'].includes(ext)) {
+                    const bytes = await entry.getData(new zip.Uint8ArrayWriter());
+                    this.files[filename] = decodeEpubText(bytes);
+                } else {
+                    this.binary_files[filename] = await entry.getData(new zip.Uint8ArrayWriter());
+                }
+            }
+        } finally {
+            await reader.close();
         }
-        await reader.close();
     }
 
     parseMetadata() {
         const parser = new DOMParser();
-        if (!('META-INF/container.xml' in this.files)) return;
+        if (!('META-INF/container.xml' in this.files)) throw new Error('EPUB is missing META-INF/container.xml');
         const meta_inf = parser.parseFromString(this.files['META-INF/container.xml'], 'text/xml');
+        if (firstByLocalName(meta_inf, 'parsererror')) throw new Error('EPUB container.xml is not valid XML');
 
-        for (const rootfile of meta_inf.getElementsByTagName('rootfile')) {
+        for (const rootfile of elementsByLocalName(meta_inf, 'rootfile')) {
             if (rootfile.getAttribute('media-type') === 'application/oebps-package+xml') {
-                this.opfPath = rootfile.getAttribute('full-path');
+                this.opfPath = normalizeEpubPath(rootfile.getAttribute('full-path') || '');
                 break;
             }
         }
 
-        if (!(this.opfPath in this.files)) return;
-
-        try {
-            const opf = parser.parseFromString(this.files[this.opfPath], 'text/xml');
-            this.metadata.title = opf.getElementsByTagName('dc:title')[0]?.textContent || '';
-            this.metadata.author = opf.getElementsByTagName('dc:creator')[0]?.textContent || '';
-            this.metadata.language = opf.getElementsByTagName('dc:language')[0]?.textContent || '';
-
-            const metaSeries = opf.querySelector('meta[name="calibre:series"]');
-            if (metaSeries) this.metadata.series = metaSeries.getAttribute('content');
-        } catch (e) {
-            console.error('Error parsing metadata:', e);
+        if (!this.opfPath || !(this.opfPath in this.files)) {
+            throw new Error('EPUB container does not reference a readable package document');
         }
+
+        const opf = parser.parseFromString(this.files[this.opfPath], 'text/xml');
+        if (firstByLocalName(opf, 'parsererror')) throw new Error('EPUB package document is not valid XML');
+        this.metadata.title = getTextByLocalName(opf, 'title');
+        this.metadata.author = getTextByLocalName(opf, 'creator');
+        this.metadata.language = getTextByLocalName(opf, 'language');
+
+        const metaSeries = elementsByLocalName(opf, 'meta').find(meta => meta.getAttribute('name') === 'calibre:series');
+        if (metaSeries) this.metadata.series = metaSeries.getAttribute('content') || '';
     }
 
     findCover() {
@@ -71,12 +107,14 @@ export class EPUBBook {
         if (!(this.opfPath in this.files)) return;
         const opf = parser.parseFromString(this.files[this.opfPath], 'text/xml');
 
-        const metaCover = opf.querySelector('meta[name="cover"]');
+        if (firstByLocalName(opf, 'parsererror')) throw new Error('EPUB package document is not valid XML');
+        const metaCover = elementsByLocalName(opf, 'meta').find(meta => meta.getAttribute('name') === 'cover');
         let coverId = metaCover?.getAttribute('content');
 
-        let coverItem = opf.querySelector('item[properties~="cover-image"]');
+        let coverItem = elementsByLocalName(opf, 'item')
+            .find(item => item.getAttribute('properties')?.split(/\s+/).includes('cover-image'));
         if (!coverItem && coverId) {
-            coverItem = opf.getElementById(coverId);
+            coverItem = elementsByLocalName(opf, 'item').find(item => item.getAttribute('id') === coverId);
         }
 
         if (coverItem) {
@@ -84,7 +122,8 @@ export class EPUBBook {
             const fullPath = resolveEpubPath(this.opfPath, this.coverPath);
 
             if (fullPath in this.binary_files) {
-                const blob = new Blob([this.binary_files[fullPath]], { type: coverItem.getAttribute('media-type') || 'image/jpeg' });
+                const mediaType = coverItem.getAttribute('media-type') || 'image/jpeg';
+                const blob = new Blob([this.binary_files[fullPath]], { type: mediaType });
                 if (this.coverUrl) URL.revokeObjectURL(this.coverUrl);
                 this.coverUrl = URL.createObjectURL(blob);
             }
@@ -112,13 +151,21 @@ export class EPUBBook {
         }
         const parser = new DOMParser();
         const opf = parser.parseFromString(this.files[this.opfPath], 'text/xml');
-        const metadata = opf.getElementsByTagName('metadata')[0];
+        if (firstByLocalName(opf, 'parsererror')) throw new Error('Cannot update metadata: package document is not valid XML');
+        const metadata = firstByLocalName(opf, 'metadata');
         if (!metadata) throw new Error('Cannot update metadata: package metadata element is missing');
 
         const setTag = (tagName, value) => {
-            let tag = opf.getElementsByTagName(tagName)[0];
+            const localName = tagName.slice(tagName.indexOf(':') + 1);
+            let tag = elementsByLocalName(metadata, localName)
+                .find(element => element.namespaceURI === DC_NAMESPACE);
             if (!tag) {
-                tag = opf.createElementNS('http://purl.org/dc/elements/1.1/', tagName);
+                let prefix = opf.lookupPrefix(DC_NAMESPACE);
+                if (!prefix) {
+                    prefix = 'dc';
+                    opf.documentElement.setAttributeNS(XMLNS_NAMESPACE, `xmlns:${prefix}`, DC_NAMESPACE);
+                }
+                tag = opf.createElementNS(DC_NAMESPACE, `${prefix}:${localName}`);
                 metadata.appendChild(tag);
             }
             tag.textContent = value;
@@ -128,7 +175,8 @@ export class EPUBBook {
         if (Object.hasOwn(newMeta, 'author')) setTag('dc:creator', newMeta.author);
         if (Object.hasOwn(newMeta, 'language')) setTag('dc:language', newMeta.language);
         if (Object.hasOwn(newMeta, 'series')) {
-            let series = opf.querySelector('meta[name="calibre:series"]');
+            let series = elementsByLocalName(metadata, 'meta')
+                .find(meta => meta.getAttribute('name') === 'calibre:series');
             if (!series) {
                 series = opf.createElementNS(metadata.namespaceURI, 'meta');
                 series.setAttribute('name', 'calibre:series');
@@ -151,37 +199,16 @@ export class EPUBBook {
             return;
         }
 
-        let sample = '';
-        for (const f in this.files) {
-            if (f.endsWith('.html') || f.endsWith('.xhtml')) {
-                sample += this.files[f].substring(0, 500);
-                if (sample.length > 2000) break;
-            }
-        }
-
-        let detected = 'en';
-        if (sample.match(/\b(e|da|com|uma|pelo)\b/i)) detected = 'pt';
-        else if (sample.match(/\b(el|la|los|las|por|con)\b/i)) detected = 'es';
-        else if (sample.match(/\b(der|die|das|und|mit)\b/i)) detected = 'de';
-        else if (sample.match(/\b(le|la|les|et|une)\b/i)) detected = 'fr';
-
-        if (detected !== current) {
-            this.metadata.language = detected;
-            this.updateMetadata(this.metadata);
-            this.addOptimization('opt_lang_applied', 'applied', detected);
-        }
+        this.addOptimization('opt_lang_warning', 'warning');
     }
 
     fixEncoding() {
-        const decl = '<?xml version="1.0" encoding="utf-8"?>';
         let count = 0;
         for (const f in this.files) {
-            if (f.endsWith('.html') || f.endsWith('.xhtml')) {
-                if (!this.files[f].includes('encoding="utf-8"') && !this.files[f].includes('encoding="UTF-8"')) {
-                    this.files[f] = decl + '\n' + this.files[f];
-                    count++;
-                }
-            }
+            const original = this.files[f];
+            const content = normalizeTextEncoding(original, f);
+            this.files[f] = content;
+            if (content !== original) count++;
         }
         if (count) this.addOptimization('opt_encoding_applied', 'applied', count);
         else this.addOptimization('opt_encoding_verified', 'verified');
@@ -192,7 +219,7 @@ export class EPUBBook {
         const bodyIDList = [];
 
         for (const f in this.files) {
-            if (f.endsWith('.html') || f.endsWith('.xhtml')) {
+            if (/\.(?:html?|xhtml)$/i.test(f)) {
                 const dom = parser.parseFromString(this.files[f], 'text/html');
                 const body = dom.getElementsByTagName('body')[0];
                 if (body?.id) {
@@ -203,7 +230,7 @@ export class EPUBBook {
 
         let count = 0;
         for (const f in this.files) {
-            if (!f.endsWith('.html') && !f.endsWith('.xhtml')) continue;
+            if (!/\.(?:html?|xhtml)$/i.test(f)) continue;
             const doc = parser.parseFromString(this.files[f], 'text/html');
             let changed = false;
             doc.querySelectorAll('a[href]').forEach(link => {
@@ -233,7 +260,7 @@ export class EPUBBook {
         const parser = new DOMParser();
         let count = 0;
         for (const f in this.files) {
-            if (f.endsWith('.html') || f.endsWith('.xhtml')) {
+            if (/\.(?:html?|xhtml)$/i.test(f)) {
                 const doc = parser.parseFromString(this.files[f], 'text/html');
                 const imgs = doc.querySelectorAll('img:not([src])');
                 if (imgs.length) {
@@ -249,9 +276,17 @@ export class EPUBBook {
 
     generateTOC() {
         const parser = new DOMParser();
+        if (!this.opfPath || !(this.opfPath in this.files)) {
+            this.addOptimization('opt_toc_warning', 'warning');
+            return;
+        }
         const opf = parser.parseFromString(this.files[this.opfPath], 'text/xml');
+        if (firstByLocalName(opf, 'parsererror')) {
+            this.addOptimization('opt_toc_warning', 'warning');
+            return;
+        }
 
-        const items = Array.from(opf.getElementsByTagName('item'));
+        const items = elementsByLocalName(opf, 'item');
         const hasTOC = items.some(item =>
             item.getAttribute('properties')?.split(/\s+/).includes('nav') ||
             item.getAttribute('media-type') === 'application/x-dtbncx+xml'
@@ -262,19 +297,35 @@ export class EPUBBook {
             return;
         }
 
+        const manifest = new Map(items.map(item => [
+            item.getAttribute('id'),
+            resolveEpubPath(this.opfPath, item.getAttribute('href') || '')
+        ]));
+        const spine = elementsByLocalName(opf, 'spine')[0];
+        const readingOrder = spine
+            ? elementsByLocalName(spine, 'itemref')
+                .filter(itemref => itemref.getAttribute('linear') !== 'no')
+                .map(itemref => manifest.get(itemref.getAttribute('idref')))
+                .filter(path => path && this.files[path] !== undefined)
+            : [];
         const headings = [];
-        for (const f in this.files) {
-            if (f.endsWith('.html') || f.endsWith('.xhtml')) {
-                const doc = parser.parseFromString(this.files[f], 'text/html');
-                const hTags = doc.querySelectorAll('h1, h2, h3');
-                hTags.forEach(h => {
-                    if (h.textContent.trim()) {
-                        if (!h.id) h.id = 'toc-' + Math.random().toString(36).substr(2, 9);
-                        headings.push({ title: h.textContent.trim(), path: f, id: h.id });
+        let generatedId = 0;
+        for (const f of readingOrder) {
+            if (!/\.(?:html?|xhtml)$/i.test(f)) continue;
+            const doc = parser.parseFromString(this.files[f], 'text/html');
+            const hTags = doc.querySelectorAll('h1, h2, h3');
+            hTags.forEach(h => {
+                if (h.textContent.trim()) {
+                    if (!h.id) {
+                        const ids = new Set(Array.from(doc.querySelectorAll('[id]'), element => element.id));
+                        do {
+                            h.id = `kdp-toc-${++generatedId}`;
+                        } while (ids.has(h.id));
                     }
-                });
-                if (hTags.length > 0) this.files[f] = new XMLSerializer().serializeToString(doc);
-            }
+                    headings.push({ title: h.textContent.trim(), path: f, id: h.id });
+                }
+            });
+            if (hTags.length > 0) this.files[f] = new XMLSerializer().serializeToString(doc);
         }
 
         if (headings.length === 0) {
@@ -311,10 +362,10 @@ export class EPUBBook {
 
         // Try to register in manifest, but don't fail if OPF is broken
         try {
-            let manifest = opf.getElementsByTagName('manifest')[0];
+            let manifest = firstByLocalName(opf, 'manifest');
             if (!manifest) {
                 // Create manifest if it doesn't exist
-                const packageEl = opf.getElementsByTagName('package')[0];
+                const packageEl = opf.documentElement;
                 if (packageEl) {
                     manifest = opf.createElementNS(packageEl.namespaceURI, 'manifest');
                     packageEl.appendChild(manifest);
@@ -365,7 +416,7 @@ export class EPUBBook {
         const allIds = new Set();
 
         for (const f in this.files) {
-            if (f.endsWith('.html') || f.endsWith('.xhtml')) {
+            if (/\.(?:html?|xhtml)$/i.test(f)) {
                 const doc = parser.parseFromString(this.files[f], 'text/html');
                 doc.querySelectorAll('[id]').forEach(el => allIds.add(`${normalizeEpubPath(f)}#${el.id}`));
                 allIds.add(normalizeEpubPath(f));
@@ -375,7 +426,7 @@ export class EPUBBook {
         let fixedCount = 0;
         let unresolvedCount = 0;
         for (const f in this.files) {
-            if (f.endsWith('.html') || f.endsWith('.xhtml')) {
+            if (/\.(?:html?|xhtml)$/i.test(f)) {
                 const doc = parser.parseFromString(this.files[f], 'text/html');
                 const links = doc.querySelectorAll('a[href]');
                 let changed = false;
@@ -418,16 +469,8 @@ export class EPUBBook {
 
     filterCSS() {
         let count = 0;
-        for (const f in this.files) {
-            if (f.endsWith('.css')) {
-                const original = this.files[f];
-                this.files[f] = this.files[f]
-                    .replace(/position:\s*fixed/gi, 'position: absolute')
-                    .replace(/overflow:\s*hidden/gi, 'overflow: visible');
-                if (this.files[f] !== original) count++;
-            }
-        }
-        if (count) this.addOptimization('opt_css_applied', 'applied', count);
+        for (const f in this.files) if (f.toLowerCase().endsWith('.css')) count++;
+        if (count) this.addOptimization('opt_css_skipped', 'skipped', count);
         else this.addOptimization('opt_css_verified', 'verified');
     }
 
@@ -443,17 +486,12 @@ export class EPUBBook {
         const parser = new DOMParser();
         let count = 0;
         for (const f in this.files) {
-            if (f.endsWith('.html') || f.endsWith('.xhtml')) {
+            if (/\.(?:html?|xhtml)$/i.test(f)) {
                 const doc = parser.parseFromString(this.files[f], 'text/html');
-                const imgs = doc.querySelectorAll('img:not([alt])');
-                imgs.forEach(img => {
-                    img.setAttribute('alt', 'Image');
-                    count++;
-                });
-                if (imgs.length) this.files[f] = new XMLSerializer().serializeToString(doc);
+                count += doc.querySelectorAll('img:not([alt])').length;
             }
         }
-        if (count) this.addOptimization('opt_a11y_applied', 'applied', count);
+        if (count) this.addOptimization('opt_a11y_warning', 'warning', count);
         else this.addOptimization('opt_a11y_verified', 'verified');
     }
 
@@ -496,11 +534,14 @@ export class EPUBBook {
     getFirstSpineFile() {
         if (!this.opfPath || !(this.opfPath in this.files)) return '';
         const opf = new DOMParser().parseFromString(this.files[this.opfPath], 'text/xml');
+        if (firstByLocalName(opf, 'parsererror')) return '';
         const manifest = new Map();
-        for (const item of opf.getElementsByTagName('item')) {
+        for (const item of elementsByLocalName(opf, 'item')) {
             manifest.set(item.getAttribute('id'), resolveEpubPath(this.opfPath, item.getAttribute('href') || ''));
         }
-        for (const itemref of opf.getElementsByTagName('itemref')) {
+        const spine = elementsByLocalName(opf, 'spine')[0];
+        if (!spine) return '';
+        for (const itemref of elementsByLocalName(spine, 'itemref')) {
             if (itemref.getAttribute('linear') === 'no') continue;
             const path = manifest.get(itemref.getAttribute('idref'));
             if (path && (this.files[path] !== undefined) && /\.(?:html?|xhtml)$/i.test(path)) return path;
@@ -529,21 +570,24 @@ export class EPUBBook {
     }
 
     async updateCover(uint8, type) {
-        const mediaType = type === 'image/png' ? 'image/png' : type === 'image/jpeg' ? 'image/jpeg' : '';
-        if (!mediaType) throw new Error('Cover image must be a JPEG or PNG');
+        const mediaType = sniffImageMimeType(uint8);
+        if (!mediaType) throw new Error('Cover image data must be a valid JPEG or PNG');
+        if (type && type !== mediaType) throw new Error('Cover image type does not match its file contents');
         if (!this.opfPath || !(this.opfPath in this.files)) throw new Error('Cannot update cover: EPUB package document is missing');
 
         const opf = new DOMParser().parseFromString(this.files[this.opfPath], 'text/xml');
-        const manifest = opf.getElementsByTagName('manifest')[0];
+        if (firstByLocalName(opf, 'parsererror')) throw new Error('Cannot update cover: package document is not valid XML');
+        const manifest = firstByLocalName(opf, 'manifest');
         if (!manifest) throw new Error('Cannot update cover: package manifest is missing');
-        const metadata = opf.getElementsByTagName('metadata')[0];
+        const metadata = firstByLocalName(opf, 'metadata');
         if (!metadata) throw new Error('Cannot update cover: package metadata element is missing');
 
-        let coverItem = opf.querySelector('item[properties~="cover-image"]');
+        let coverItem = elementsByLocalName(opf, 'item')
+            .find(item => item.getAttribute('properties')?.split(/\s+/).includes('cover-image'));
         if (!coverItem) {
-            const coverMeta = opf.querySelector('meta[name="cover"]');
+            const coverMeta = elementsByLocalName(metadata, 'meta').find(meta => meta.getAttribute('name') === 'cover');
             const coverId = coverMeta?.getAttribute('content');
-            if (coverId) coverItem = Array.from(opf.getElementsByTagName('item')).find(item => item.getAttribute('id') === coverId);
+            if (coverId) coverItem = elementsByLocalName(opf, 'item').find(item => item.getAttribute('id') === coverId);
         }
 
         const extension = mediaType === 'image/png' ? '.png' : '.jpg';
@@ -554,7 +598,7 @@ export class EPUBBook {
             if (!itemId) {
                 itemId = 'cover-image';
                 let suffix = 1;
-                while (Array.from(opf.getElementsByTagName('item')).some(item => item.getAttribute('id') === itemId)) {
+                while (elementsByLocalName(opf, 'item').some(item => item.getAttribute('id') === itemId)) {
                     itemId = `cover-image-${suffix++}`;
                 }
                 coverItem.setAttribute('id', itemId);
@@ -576,7 +620,7 @@ export class EPUBBook {
             }
             itemId = 'cover-image';
             let idSuffix = 1;
-            while (Array.from(opf.getElementsByTagName('item')).some(item => item.getAttribute('id') === itemId)) {
+            while (elementsByLocalName(opf, 'item').some(item => item.getAttribute('id') === itemId)) {
                 itemId = `cover-image-${idSuffix++}`;
             }
             coverItem = opf.createElementNS(manifest.namespaceURI, 'item');
@@ -587,7 +631,7 @@ export class EPUBBook {
             manifest.appendChild(coverItem);
         }
 
-        let coverMeta = opf.querySelector('meta[name="cover"]');
+        let coverMeta = elementsByLocalName(metadata, 'meta').find(meta => meta.getAttribute('name') === 'cover');
         if (!coverMeta) {
             coverMeta = opf.createElementNS(metadata.namespaceURI, 'meta');
             coverMeta.setAttribute('name', 'cover');

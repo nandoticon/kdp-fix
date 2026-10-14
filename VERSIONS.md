@@ -1,37 +1,30 @@
-# Kindle EPUB Fix - Standalone Version
+# Version history
 
-## Two Versions Available
+## v2.2 — October 14, 2026
 
-### 1. **Modular Version** (Current - Requires Server)
-- **Location**: `index.html` + `js/` folder
-- **Pros**: Clean code, easier to maintain, PWA support
-- **Cons**: Needs local server (`python -m http.server 8000`)
-- **Best for**: Development, GitHub Pages deployment
+- Add a clear-results action that closes previews, revokes cover object URLs, and releases processed book data.
+- Correct the wide-screen layout so the status, controls, and results flow together in one results panel.
+- Reject unsupported or malformed text encodings instead of silently falling back to UTF-8 and altering book content.
+- Validate cover image signatures and reject file types that do not match their contents.
+- Add regression coverage for strict encoding and image-signature validation.
 
-### 2. **Standalone Version** (Coming Soon)
-- **Location**: `standalone.html` (single file)
-- **Pros**: Works offline, double-click to open, no server needed
-- **Cons**: Larger file size (~500KB), harder to maintain
-- **Best for**: Offline use, sharing with non-technical users
+## v2.1 — October 14, 2026
 
-## Quick Decision Guide
+- Decode EPUB text according to byte-order marks and declared XML encodings; normalize supported text declarations to UTF-8 before export.
+- Close ZIP readers after errors and reject malformed/missing package documents with a clear per-file error.
+- Preserve CSS, embedded fonts, and original image accessibility content rather than applying potentially damaging guesses.
+- Generate navigation in OPF spine order and support namespaced package documents and Dublin Core metadata.
+- Limit concurrent batch processing to two EPUBs and summarize partial failures.
+- Reject archives with more than 20,000 entries or 512 MiB of declared uncompressed content.
+- Split the app, UI, preview, and translation dictionaries into JavaScript modules; organize CSS in layers and page markup in cached HTML fragments.
+- Add regression coverage for encoding, path handling, and translations across all page fragments.
 
-**Use Modular Version if:**
-- You're comfortable running a simple command
-- You want the latest features and updates
-- You're deploying to a web server
+## v2.0
 
-**Use Standalone Version if:**
-- You want zero setup - just double-click and go
-- You need to work completely offline
-- You're sharing with someone who isn't technical
+- Modular ES module application and service-worker-based offline caching.
+- Batch processing, metadata editing, cover replacement, and chapter preview.
+- English, Portuguese, and Spanish translations; light and dark themes.
 
-## Current Recommendation
-For now, use the **modular version** with Python server:
-```bash
-cd C:\Users\nando\Documents\GitHub\kdp-fix
-python -m http.server 8000
-```
-Then open: http://localhost:8000
+## v1.5
 
-I can create the standalone version if you prefer, but it will be a ~500KB single HTML file with everything embedded.
+- Initial batch support, metadata editor, EPUB preview, and responsive visual redesign.

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Kindle EPUB Fix</title>
+    <title>Kindle EPUB Fix v2.2</title>
     <script src="https://unpkg.com/@zip.js/zip.js@2.6.12/dist/zip.min.js"></script>
     <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -16,179 +15,13 @@
         }
     </script>
 </head>
-
 <body>
     <div class="container">
-        <!-- HEADER -->
-        <header>
-            <div class="header-content">
-                <div>
-                    <h1 data-i18n="title">Kindle EPUB Fix</h1>
-                    <p class="subtitle" data-i18n="subtitle">Premium E-book Optimization Tool</p>
-                </div>
-                <div class="header-buttons">
-                    <button id="lang-toggle" class="dl-btn btn-secondary">EN / PT / ES</button>
-                    <button id="theme-toggle" class="dl-btn btn-secondary">🌓</button>
-                </div>
-            </div>
-            <p class="description" data-i18n="description">
-                Prepare your EPUB files for "Send to Kindle" by fixing encoding errors,
-                unresolved hyperlinks, and missing metadata.
-            </p>
-        </header>
-
-        <!-- PRIVACY NOTICE -->
-        <div class="privacy-notice">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-            <span><strong data-i18n="privacy_label">Privacy:</strong> <span data-i18n="privacy_text">All processing
-                    happens in your browser. Your files are never uploaded.</span></span>
-        </div>
-
-        <!-- UPLOAD SECTION -->
-        <section class="upload-section">
-            <div class="drop-zone" id="drop-zone">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <p data-i18n="upload">Drag & Drop EPUB files here</p>
-                <span data-i18n="upload_hint">or click to browse your computer</span>
-                <input id="file" type="file" accept=".epub" multiple>
-            </div>
-        </section>
-
-        <!-- BULK METADATA -->
-        <div id="bulk-edit-container" class="apple-card" style="display:none; margin-bottom: 2rem;">
-            <h2 data-i18n="bulk" style="margin-bottom: 1rem; font-size: 1.2rem;">Bulk Metadata Edit</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                <div class="form-group">
-                    <label data-i18n="meta_author" style="font-size: 0.8rem; opacity: 0.7;">Author</label>
-                    <input id="bulk-author" type="text"
-                        style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--apple-card-border); background: var(--apple-card-bg); color: var(--text-primary);">
-                </div>
-                <div class="form-group">
-                    <label data-i18n="meta_series" style="font-size: 0.8rem; opacity: 0.7;">Series</label>
-                    <input id="bulk-series" type="text"
-                        style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--apple-card-border); background: var(--apple-card-bg); color: var(--text-primary);">
-                </div>
-            </div>
-            <button id="apply-bulk-metadata" class="dl-btn btn-secondary" style="margin-top: 1rem; width: 100%;"
-                data-i18n="apply_bulk">Apply to All</button>
-        </div>
-
-        <!-- STATUS & DOWNLOAD ALL -->
-        <div id="main_status" role="status" aria-live="polite"></div>
-        <button id="btnDlAll" class="dl-btn" style="display:none; margin-bottom: 2rem; width: 100%;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span data-i18n="download_all">Download all as ZIP</span>
-        </button>
-
-        <!-- OUTPUT RESULTS -->
-        <div id="output"></div>
-
-        <!-- FEATURES -->
-        <div class="features">
-            <div class="feature-item">
-                <h3 data-i18n="feat_enc_title">UTF-8 Encoding</h3>
-                <p data-i18n="feat_enc_desc">Adds missing UTF-8 declarations to fix special character rendering.</p>
-            </div>
-            <div class="feature-item">
-                <h3 data-i18n="feat_link_title">Hyperlink Fix</h3>
-                <p data-i18n="feat_link_desc">Resolves NCX table of content links that Amazon often rejects.</p>
-            </div>
-            <div class="feature-item">
-                <h3 data-i18n="feat_meta_title">Metadata Validation</h3>
-                <p data-i18n="feat_meta_desc">Detects invalid language tags and helps you correct them.</p>
-            </div>
-            <div class="feature-item">
-                <h3 data-i18n="feat_html_title">HTML Cleanup</h3>
-                <p data-i18n="feat_html_desc">Removes stray image tags and other common formatting issues.</p>
-            </div>
-        </div>
-        <!-- CHANGELOG -->
-        <footer class="changelog-section"
-            style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--apple-card-border); opacity: 0.8;">
-            <h2 data-i18n="changelog_title" style="font-size: 1.2rem; margin-bottom: 2rem;">Version History</h2>
-            <div class="changelog-grid"
-                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                <div class="changelog-item">
-                    <h3 data-i18n="v2_header" style="font-size: 1rem; color: var(--apple-blue); margin-bottom: 0.5rem;">
-                        v2.0 - Current</h3>
-                    <ul
-                        style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
-                        <li data-i18n="v2_desc">🚀 Full modular refactor with ES6 modules</li>
-                        <li data-i18n="v2_4k">🖥️ 4K Display optimization with 5x container width</li>
-                        <li data-i18n="v2_parallel">⚡ Parallel EPUB processing using Promise.all</li>
-                        <li data-i18n="v2_theme">🌓 Dark/Light theme with smooth transitions</li>
-                        <li data-i18n="v2_i18n">🌐 Real-time PT/EN localization system</li>
-                        <li data-i18n="v2_toc">🛠️ Improved TOC generation with OPF auto-repair</li>
-                        <li data-i18n="v2_icons">📊 Detailed optimization status with Lucide icons</li>
-                    </ul>
-                </div>
-                <div class="changelog-item">
-                    <h3 data-i18n="v1_header"
-                        style="font-size: 1rem; color: var(--text-primary); opacity: 0.6; margin-bottom: 0.5rem;">v1.5
-                    </h3>
-                    <ul
-                        style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--text-secondary); opacity: 0.6; line-height: 1.6;">
-                        <li data-i18n="v1_bulk">📦 Bulk processing support</li>
-                        <li data-i18n="v1_meta">📝 In-browser metadata editor</li>
-                        <li data-i18n="v1_preview">📖 EPUB reader preview</li>
-                        <li data-i18n="v1_design">💅 Apple-inspired Design System</li>
-                    </ul>
-                </div>
-            </div>
-        </footer>
+        <div id="app-header"></div>
+        <div id="app-workspace"></div>
+        <div id="app-overview"></div>
     </div>
-
-    <!-- MODALS -->
-    <div id="modal-metadata" class="modal" role="dialog" aria-modal="true" aria-hidden="true"
-        aria-labelledby="metadata-dialog-title">
-        <div class="modal-content">
-            <h2 id="metadata-dialog-title" data-i18n="edit_meta">Edit Metadata</h2>
-            <div class="form-group">
-                <label data-i18n="meta_title">Title</label>
-                <input id="edit-title" type="text">
-            </div>
-            <div class="form-group">
-                <label data-i18n="meta_author">Author</label>
-                <input id="edit-author" type="text">
-            </div>
-            <div class="form-group">
-                <label data-i18n="meta_series">Series</label>
-                <input id="edit-series" type="text">
-            </div>
-            <div class="form-group">
-                <label data-i18n="meta_language">Language</label>
-                <input id="edit-language" type="text">
-            </div>
-            <div class="modal-actions">
-                <button id="metadata-save" class="dl-btn" data-i18n="save">Save</button>
-                <button id="metadata-cancel" class="dl-btn btn-secondary" data-i18n="cancel">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-reader" class="modal" role="dialog" aria-modal="true" aria-hidden="true"
-        aria-label="EPUB preview">
-        <div class="modal-content modal-reader">
-            <button id="reader-close" class="modal-close" aria-label="Close preview">×</button>
-            <iframe id="reader-frame" title="EPUB preview" sandbox="" referrerpolicy="no-referrer"></iframe>
-        </div>
-    </div>
-
-    <script type="module" src="script.js"></script>
+    <div id="app-modals"></div>
+    <script type="module" src="js/bootstrap.js"></script>
 </body>
-
 </html>

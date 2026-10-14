@@ -1,0 +1,198 @@
+/* HTML partial mount points keep the page shell separate from its content. */
+#app-header,
+#app-workspace,
+#app-overview,
+#app-modals {
+    display: contents;
+}
+
+.container {
+    width: 100%;
+    max-width: 1800px;
+    /* Increased for better 4K utilization */
+    margin: 0 auto;
+    padding: calc(2rem + var(--safe-top)) calc(2rem + var(--safe-right)) calc(2rem + var(--safe-bottom)) calc(2rem + var(--safe-left));
+}
+
+/* Large display optimization */
+@media (min-width: 2000px) {
+    .container {
+        max-width: 2000px;
+        /* Even wider for ultra-wide displays */
+        padding-left: calc(3rem + var(--safe-left));
+        padding-right: calc(3rem + var(--safe-right));
+        padding-top: calc(1.5rem + var(--safe-top));
+        /* Reduced top padding */
+    }
+}
+
+@media (min-width: 2560px) {
+    .container {
+        max-width: 2200px;
+        /* Maximum for 4K displays */
+    }
+}
+
+/* 2-COLUMN LAYOUT FOR 4K DISPLAYS */
+@media (min-width: 1800px) {
+    .container {
+        display: grid;
+        grid-template-columns: 500px 1fr;
+        grid-template-areas:
+            "header header"
+            "privacy privacy"
+            "upload results"
+            "features features";
+        gap: 2rem;
+        align-items: start;
+    }
+
+    header {
+        grid-area: header;
+    }
+
+    .privacy-notice {
+        grid-area: privacy;
+    }
+
+    .upload-section {
+        grid-area: upload;
+        position: sticky;
+        top: 2rem;
+    }
+
+    #results-panel {
+        grid-area: results;
+    }
+
+    .features {
+        grid-area: features;
+    }
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.header-buttons button {
+    padding: 0.5rem 1rem !important;
+    min-width: auto !important;
+}
+
+h1 {
+    font-size: clamp(2rem, 6vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 0.3rem 0;
+    background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--apple-blue);
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    /* Reduced from 1.5rem */
+    margin: 1.5rem 0;
+    /* Reduced from 3rem */
+}
+
+@media (min-width: 1400px) {
+    .features {
+        grid-template-columns: repeat(4, 1fr);
+        margin: 1rem 0;
+        /* Even smaller margin on large screens */
+    }
+}
+
+@media (min-width: 2200px) {
+    .features {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        /* More spacing on 4K */
+    }
+}
+
+.feature-item {
+    background: var(--apple-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 0.5px solid var(--apple-card-border);
+    border-radius: 16px;
+    /* Reduced from 20px */
+    padding: 1rem;
+    /* Reduced from 1.5rem */
+    transition: transform 0.3s var(--spring-bounce);
+}
+
+.feature-item:hover {
+    transform: translateY(-3px);
+    /* Reduced from -5px */
+}
+
+.feature-item h3 {
+    font-size: 0.95rem;
+    /* Reduced from 1.1rem */
+    margin-bottom: 0.4rem;
+    /* Reduced from 0.5rem */
+    color: var(--text-primary);
+}
+
+.feature-item p {
+    font-size: 0.8rem;
+    /* Reduced from 0.9rem */
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.privacy-notice {
+    background: rgba(52, 199, 89, 0.1);
+    border: 0.5px solid rgba(52, 199, 89, 0.2);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    margin: 2rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #34C759;
+}
+
+.privacy-notice svg {
+    color: var(--success);
+    flex-shrink: 0;
+}

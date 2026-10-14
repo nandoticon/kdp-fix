@@ -1,13 +1,29 @@
-const CACHE_NAME = 'kdp-fix-v2';
+const CACHE_NAME = 'kdp-fix-v4';
 const APP_BASE = new URL('.', self.registration.scope);
 const LOCAL_ASSETS = [
     '',
     'index.html',
     'styles.css',
+    'styles/base.css',
+    'styles/layout.css',
+    'styles/forms.css',
+    'styles/results.css',
+    'styles/utilities.css',
     'script.js',
+    'js/bootstrap.js',
+    'js/app.js',
+    'js/ui.js',
+    'js/preview.js',
     'js/constants.js',
+    'js/i18n/en.js',
+    'js/i18n/pt.js',
+    'js/i18n/es.js',
     'js/utils.js',
     'js/epub-engine.js',
+    'partials/header.html',
+    'partials/workspace.html',
+    'partials/overview.html',
+    'partials/modals.html',
     'manifest.json'
 ].map(path => new URL(path, APP_BASE).href);
 const EXTERNAL_ASSETS = [

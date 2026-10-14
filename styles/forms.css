@@ -1,0 +1,219 @@
+/* Modal System */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(12px);
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    position: relative;
+    width: min(100%, 550px);
+    max-height: min(90vh, 900px);
+    overflow-y: auto;
+    padding: 2rem;
+    color: var(--text-primary);
+    background: var(--apple-glass-heavy);
+    border: 1px solid var(--apple-card-border);
+    border-radius: 24px;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+}
+
+.modal-reader {
+    width: min(100%, 1000px);
+    height: min(90vh, 1000px);
+    max-height: none;
+    padding: 3rem 1rem 1rem;
+}
+
+.modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    z-index: 1;
+    border: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+#reader-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--apple-card-border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+/* Form Styling - Premium Inputs */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
+    padding-left: 0.5rem;
+}
+
+input[type="text"] {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--apple-card-border);
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+    color: white;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.3s var(--spring-bounce);
+    /* Assuming --spring is meant to be --spring-bounce based on context */
+    outline: none;
+}
+
+input[type="text"]:focus {
+    border-color: var(--apple-blue);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+}
+
+/* Reader Preview JAR Fix */
+#reader-frame {
+    background: #ffffff;
+}
+
+/* Upload Area */
+.upload-section {
+    margin: 3rem 0;
+}
+
+/* Glassmorphism Refinement */
+.upload-section {
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 1800px) {
+    .upload-section {
+        margin-bottom: 0;
+    }
+}
+
+.drop-zone {
+    background: var(--apple-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 2px dashed var(--apple-card-border);
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    /* Balanced size */
+    text-align: center;
+    transition: all 0.3s var(--spring-bounce);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 1400px) {
+    .drop-zone {
+        padding: 3.5rem 3rem;
+        /* Slightly larger on big screens but not excessive */
+    }
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+    border-color: var(--apple-blue);
+    background: rgba(var(--apple-blue-rgb), 0.1);
+    transform: scale(1.02);
+}
+
+.drop-zone svg {
+    width: 64px;
+    height: 64px;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.drop-zone p {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.drop-zone span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* iPhone 15 Touch Targets & Safe Areas */
+@media (max-width: 768px) {
+    #output {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: calc(var(--safe-top) + 1rem) 1.25rem;
+    }
+
+    .modal {
+        padding: 1.5rem;
+    }
+
+    .dl-btn {
+        min-height: 50px;
+        /* Enhanced touch target */
+        width: 100%;
+        border-radius: 16px;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+    }
+}
+
+#file {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.options {
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.checkbox-container input {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--primary);
+}

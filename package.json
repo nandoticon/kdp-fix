@@ -1,6 +1,6 @@
 {
   "name": "kdp-fix",
-  "version": "1.0.0",
+  "version": "2.2.0",
   "description": "Amazon Send-to-Kindle service has accepted EPUB, however, for historical reason\r it still assumes ISO-8859-1 encoding if no encoding is specified. This creates weird formatting errors for special characters.",
   "main": "script.js",
   "scripts": {

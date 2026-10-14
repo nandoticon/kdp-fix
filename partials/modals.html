@@ -1,0 +1,35 @@
+    <!-- MODALS -->
+    <div id="modal-metadata" class="modal" role="dialog" aria-modal="true" aria-hidden="true"
+        aria-labelledby="metadata-dialog-title">
+        <div class="modal-content">
+            <h2 id="metadata-dialog-title" data-i18n="edit_meta">Edit Metadata</h2>
+            <div class="form-group">
+                <label data-i18n="meta_title">Title</label>
+                <input id="edit-title" type="text">
+            </div>
+            <div class="form-group">
+                <label data-i18n="meta_author">Author</label>
+                <input id="edit-author" type="text">
+            </div>
+            <div class="form-group">
+                <label data-i18n="meta_series">Series</label>
+                <input id="edit-series" type="text">
+            </div>
+            <div class="form-group">
+                <label data-i18n="meta_language">Language</label>
+                <input id="edit-language" type="text">
+            </div>
+            <div class="modal-actions">
+                <button id="metadata-save" class="dl-btn" data-i18n="save">Save</button>
+                <button id="metadata-cancel" class="dl-btn btn-secondary" data-i18n="cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-reader" class="modal" role="dialog" aria-modal="true" aria-hidden="true"
+        aria-label="EPUB preview">
+        <div class="modal-content modal-reader">
+            <button id="reader-close" class="modal-close" aria-label="Close preview">×</button>
+            <iframe id="reader-frame" title="EPUB preview" sandbox="" referrerpolicy="no-referrer"></iframe>
+        </div>
+    </div>

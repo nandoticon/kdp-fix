@@ -1,0 +1,53 @@
+        <!-- UPLOAD SECTION -->
+        <section class="upload-section">
+            <div class="drop-zone" id="drop-zone">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p data-i18n="upload">Drag & Drop EPUB files here</p>
+                <span data-i18n="upload_hint">or click to browse your computer</span>
+                <input id="file" type="file" accept=".epub" multiple>
+            </div>
+
+            <!-- BULK METADATA -->
+            <div id="bulk-edit-container" class="apple-card" style="display:none; margin-bottom: 2rem;">
+                <h2 data-i18n="bulk" style="margin-bottom: 1rem; font-size: 1.2rem;">Bulk Metadata Edit</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label data-i18n="meta_author" style="font-size: 0.8rem; opacity: 0.7;">Author</label>
+                        <input id="bulk-author" type="text"
+                            style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--apple-card-border); background: var(--apple-card-bg); color: var(--text-primary);">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="meta_series" style="font-size: 0.8rem; opacity: 0.7;">Series</label>
+                        <input id="bulk-series" type="text"
+                            style="width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--apple-card-border); background: var(--apple-card-bg); color: var(--text-primary);">
+                    </div>
+                </div>
+                <button id="apply-bulk-metadata" class="dl-btn btn-secondary" style="margin-top: 1rem; width: 100%;"
+                    data-i18n="apply_bulk">Apply to All</button>
+            </div>
+        </section>
+
+        <!-- STATUS & RESULTS -->
+        <section id="results-panel">
+            <div id="main_status" role="status" aria-live="polite"></div>
+            <div id="results-toolbar" style="display:none;">
+                <button id="btnDlAll" class="dl-btn" style="display:none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span data-i18n="download_all">Download all as ZIP</span>
+                </button>
+                <button id="btnClearResults" class="dl-btn btn-secondary" data-i18n="clear_results" style="display:none;">
+                    Clear results
+                </button>
+            </div>
+            <div id="output"></div>
+        </section>

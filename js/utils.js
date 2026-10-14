@@ -2,6 +2,51 @@ export function basename(path) {
     return path.split('/').pop();
 }
 
+export function decodeEpubText(bytes) {
+    let encoding = 'utf-8';
+    if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xfe) {
+        encoding = 'utf-16le';
+    } else if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) {
+        encoding = 'utf-16be';
+    } else {
+        if (bytes.length >= 4 && bytes[0] === 0x3c && bytes[1] === 0 && bytes[2] === 0x3f && bytes[3] === 0) {
+            encoding = 'utf-16le';
+        } else if (bytes.length >= 4 && bytes[0] === 0 && bytes[1] === 0x3c && bytes[2] === 0 && bytes[3] === 0x3f) {
+            encoding = 'utf-16be';
+        }
+        const prefix = String.fromCharCode(...bytes.subarray(0, Math.min(bytes.length, 512)));
+        if (encoding === 'utf-8') {
+            const declared = prefix.match(/<\?xml[^>]*encoding\s*=\s*["']([^"']+)["']/i)?.[1]
+                || prefix.match(/<meta\b[^>]*\bcharset\s*=\s*["']?([^"'\s/>;]+)/i)?.[1]
+                || prefix.match(/<meta\b[^>]*\bcontent\s*=\s*["'][^"']*?charset\s*=\s*([^"';\s]+)/i)?.[1]
+                || prefix.match(/^@charset\s+["']([^"']+)["']/i)?.[1];
+            if (declared) encoding = declared;
+        }
+    }
+
+    try {
+        return new TextDecoder(encoding, { fatal: true }).decode(bytes);
+    } catch (error) {
+        throw new Error(`Unable to decode EPUB text using ${encoding}: ${error.message}`, { cause: error });
+    }
+}
+
+export function normalizeTextEncoding(text, path) {
+    const extension = path.slice(path.lastIndexOf('.')).toLowerCase();
+    if (extension !== '.css' &&
+        !['.html', '.htm', '.xhtml', '.xml', '.opf', '.ncx', '.svg'].includes(extension)) {
+        return text;
+    }
+
+    let content = text.replace(/^\uFEFF/, '').replace(/<\?xml\b[^?]*\?>/gi, '');
+    content = content.replace(/(<meta\b[^>]*\bcharset\s*=\s*["']?)[^"'\s/>]+/gi, '$1utf-8');
+    content = content.replace(/(<meta\b[^>]*\bcontent\s*=\s*["'][^"']*?charset\s*=\s*)[^"']+/gi, '$1utf-8');
+    if (extension === '.css') {
+        return content.replace(/@charset\s+["'][^"']+["']\s*;/i, '@charset "UTF-8";');
+    }
+    return `<?xml version="1.0" encoding="UTF-8"?>\n${content.trimStart()}`;
+}
+
 export function normalizeEpubPath(path) {
     const parts = [];
     for (const part of path.replace(/\\/g, '/').split('/')) {
@@ -46,6 +91,18 @@ export function encodeEpubPath(path) {
 
 export function simplifyLanguage(lang) {
     return (lang || '').split('-').shift().toLowerCase();
+}
+
+export function sniffImageMimeType(bytes) {
+    if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+        return 'image/jpeg';
+    }
+    if (bytes.length >= 8 &&
+        bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 &&
+        bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) {
+        return 'image/png';
+    }
+    return '';
 }
 
 export function sanitizeHtml(html) {

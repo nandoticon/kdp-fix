@@ -1,62 +1,50 @@
-# Kindle EPUB Fix (v2.0)
+# Kindle EPUB Fix (v2.2)
 
-A premium, browser-based tool to optimize and repair EPUB files specifically for Amazon's "Send to Kindle" service. 100% client-side, offline-safe, and privacy-focused.
+A browser-based tool for checking and repairing EPUBs for Amazon Send to Kindle. EPUBs are processed locally in your browser; book content is not uploaded.
 
-## ✨ Features
+## Features
 
-- **Parallel Processing**: Batch process multiple EPUBs simultaneously.
-- **Smart Repair**: 
-  - Fixes UTF-8 encoding declarations.
-  - Repairs broken NCX/Nav Table of Contents.
-  - Automatically handles malformed OPF structures.
-  - Sanitizes HTML and removes stray tags.
-- **Advanced Editing**:
-  - In-browser Metadata Editor (Title, Author, Series, Language).
-  - Drag & Drop cover replacement.
-- **Visual Excellence**:
-  - Optimized for 4K displays (responsive 2-column layout).
-  - Apple-inspired design with Dark/Light mode support.
-  - Real-time PT/EN localization.
-- **Privacy First**: Files are NEVER uploaded to any server. Everything happens in your browser.
+- Batch processing with limited concurrency to reduce memory pressure.
+- UTF-8 normalization for supported EPUB text resources, including UTF-8, UTF-16, and declared legacy encodings on input.
+- EPUB 2/3 package metadata and cover editing, including nested package paths and namespaced XML.
+- EPUB navigation generation in spine reading order and internal-link validation.
+- Large JPEG/PNG compression only when the result is smaller, while preserving the original image format.
+- ZIP reader limits of 20,000 entries and 512 MiB total uncompressed content per EPUB.
+- Embedded fonts and original CSS are preserved to avoid unexpectedly changing a book's appearance.
+- A sandboxed, script-disabled chapter preview with packaged resources embedded locally.
+- Explicitly clear processed books and release their in-memory data when finished.
+- Validate replacement cover image contents rather than trusting the selected file's extension.
+- English, Portuguese, and Spanish UI; light/dark themes; installable PWA support.
 
-## 🚀 Quick Start
+Language detection is intentionally conservative: when the package language is missing or invalid, the tool reports that it could not confidently identify the language rather than guessing and changing the book metadata. Missing image descriptions are reported without adding generic, misleading alt text. Chapter splitting and Kindle PageFlip metadata are not implemented and are reported as skipped.
 
-Due to security restrictions on ES6 modules and Service Workers, a local server is required.
+## Run locally
 
-### 1. Run the Server
-Open your terminal in the project folder and run:
+Serve the project over HTTP (ES modules and service workers require a server):
 
 ```bash
-# Using Python (Pre-installed on most systems)
 python -m http.server 8000
 ```
 
-### 2. Open the App
-Visit: **[http://localhost:8000](http://localhost:8000)**
+Then open <http://localhost:8000>. On the first online visit the app loads its browser libraries from public CDNs; after they are cached by the service worker, the app can work offline while the browser retains its cache.
 
-## 📦 Project Structure
+## Tests
 
-- `index.html`: Main application entry point.
-- `styles.css`: Advanced Apple-style design system.
-- `script.js`: Application coordinator and state management.
-- `sw.js`: Service worker for offline functionality.
-- `js/`:
-  - `epub-engine.js`: Heart of the app. Handles EPUB reading, fixing, and writing.
-  - `utils.js`: Helper functions for compression and DOM manipulation.
-  - `constants.js`: Localization strings and configuration.
+Run the regression tests with Node.js 18 or newer:
 
-## 🛠️ Offline Support (PWA)
+```bash
+npm test
+```
 
-This app is a Progressive Web App. Once loaded via the local server for the first time, you can:
-1. "Install" it or "Add to Home Screen".
-2. Use it completely offline without needing to rerun the server command (provided the browser cache is maintained).
+## Source layout
 
-## 🔒 Security & Privacy
+- `js/app.js` coordinates file processing and user actions; `js/ui.js` renders statuses and result cards.
+- `js/preview.js` builds the sandboxed EPUB preview; `js/epub-engine.js` and `js/utils.js` contain EPUB handling.
+- `js/constants.js` assembles the English, Portuguese, and Spanish dictionaries from `js/i18n/`.
+- `styles.css` loads the focused stylesheets in `styles/`.
+- `index.html` is the page shell; `partials/` contains its UI sections, assembled by `js/bootstrap.js`.
+- `sw.js` pre-caches the page fragments, stylesheets, and modules for offline startup.
 
-This application uses the `zip.js` library to deconstruct and rebuild EPUB files directly in your browser's memory.
-- No files are uploaded.
-- No analytics are tracked.
-- No external APIs are called during processing.
+## Privacy
 
----
-Created with ❤️ for Kindle readers.
+EPUB files remain in browser memory and are not sent to a server. The app does load its UI libraries from CDNs on first use; book files are never included in those requests.
