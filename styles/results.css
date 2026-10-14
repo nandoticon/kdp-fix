@@ -79,7 +79,7 @@
     height: 180px;
     border-radius: 12px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--cover-preview-bg);
     border: 1px solid var(--apple-card-border);
     cursor: pointer;
     transition: transform 0.3s var(--spring-bounce);
@@ -268,12 +268,13 @@
 }
 
 .dl-btn.btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    background: var(--secondary-button-bg);
     box-shadow: none;
 }
 
 .dl-btn.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--secondary-button-hover-bg);
 }
 
 #btnDlAll {

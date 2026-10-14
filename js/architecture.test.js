@@ -60,3 +60,14 @@ test('optional converter health requests bypass service-worker caching', async (
     assert.ok(serviceWorker.includes("'js/converter-availability.js'"), 'Converter status module is not cached offline');
     assert.match(app, /void showConverterAvailability\(/, 'Converter status check must not block EPUB app startup');
 });
+
+test('light theme defines readable controls and inputs instead of retaining dark-mode colors', async () => {
+    const baseStyles = await readFile(new URL('../styles/base.css', import.meta.url), 'utf8');
+    const formStyles = await readFile(new URL('../styles/forms.css', import.meta.url), 'utf8');
+    const resultStyles = await readFile(new URL('../styles/results.css', import.meta.url), 'utf8');
+
+    assert.match(baseStyles, /body\.light-mode\s*\{[^}]*--input-text:\s*#1d1d1f/s);
+    assert.match(baseStyles, /body\.light-mode\s*\{[^}]*--secondary-button-bg:\s*rgba\(0,\s*0,\s*0,/s);
+    assert.match(formStyles, /input\[type="text"\][^{]*\{[^}]*color:\s*var\(--input-text\)/s);
+    assert.match(resultStyles, /\.dl-btn\.btn-secondary\s*\{[^}]*color:\s*var\(--text-primary\)/s);
+});

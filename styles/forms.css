@@ -79,11 +79,11 @@ label {
 
 input[type="text"] {
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--input-bg);
     border: 1px solid var(--apple-card-border);
     border-radius: 12px;
     padding: 0.8rem 1rem;
-    color: white;
+    color: var(--input-text);
     font-family: inherit;
     font-size: 1rem;
     transition: all 0.3s var(--spring-bounce);
@@ -93,7 +93,7 @@ input[type="text"] {
 
 input[type="text"]:focus {
     border-color: var(--apple-blue);
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--input-focus-bg);
     box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
 }
 
