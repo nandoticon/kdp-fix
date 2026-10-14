@@ -51,6 +51,12 @@ function applyI18N() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.getAttribute('data-i18n'));
   });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+  });
 }
 
 async function handleFiles(files) {
@@ -347,7 +353,14 @@ document.getElementById('lang-toggle').addEventListener('click', () => {
 
 document.getElementById('theme-toggle').addEventListener('click', () => {
   document.body.classList.toggle('light-mode');
-  localStorage.setItem('kdp_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+  const isLightMode = document.body.classList.contains('light-mode');
+  localStorage.setItem('kdp_theme', isLightMode ? 'light' : 'dark');
+  const icon = document.createElement('i');
+  icon.id = 'theme-icon';
+  icon.setAttribute('data-lucide', isLightMode ? 'sun' : 'moon');
+  icon.setAttribute('aria-hidden', 'true');
+  document.getElementById('theme-toggle').replaceChildren(icon);
+  refreshIcons();
 });
 
 document.addEventListener('keydown', event => {
@@ -357,6 +370,9 @@ document.addEventListener('keydown', event => {
   }
 });
 
-if (localStorage.getItem('kdp_theme') === 'light') document.body.classList.add('light-mode');
+if (localStorage.getItem('kdp_theme') === 'light') {
+  document.body.classList.add('light-mode');
+  document.querySelector('#theme-toggle [data-lucide]').setAttribute('data-lucide', 'sun');
+}
 applyI18N();
-if (window.lucide) window.lucide.createIcons();
+refreshIcons();

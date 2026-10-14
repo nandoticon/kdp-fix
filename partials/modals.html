@@ -20,8 +20,8 @@
                 <input id="edit-language" type="text">
             </div>
             <div class="modal-actions">
-                <button id="metadata-save" class="dl-btn" data-i18n="save">Save</button>
-                <button id="metadata-cancel" class="dl-btn btn-secondary" data-i18n="cancel">Cancel</button>
+                <button id="metadata-save" class="dl-btn"><i data-lucide="save" aria-hidden="true"></i><span data-i18n="save">Save</span></button>
+                <button id="metadata-cancel" class="dl-btn btn-secondary"><i data-lucide="x" aria-hidden="true"></i><span data-i18n="cancel">Cancel</span></button>
             </div>
         </div>
     </div>
@@ -29,7 +29,7 @@
     <div id="modal-reader" class="modal" role="dialog" aria-modal="true" aria-hidden="true"
         aria-label="EPUB preview">
         <div class="modal-content modal-reader">
-            <button id="reader-close" class="modal-close" aria-label="Close preview">×</button>
+            <button id="reader-close" class="modal-close" aria-label="Close preview"><i data-lucide="x" aria-hidden="true"></i></button>
             <iframe id="reader-frame" title="EPUB preview" sandbox="" referrerpolicy="no-referrer"></iframe>
         </div>
     </div>

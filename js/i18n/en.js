@@ -19,6 +19,8 @@ export default {
         download_all: 'Download all as ZIP',
         clear_results: 'Clear results',
         results_cleared: 'Results cleared; book data has been released from memory.',
+        change_language: 'Change language',
+        toggle_theme: 'Toggle light or dark theme',
         edit_meta: 'Edit Meta',
         preview: 'Preview',
         save: 'Save',

@@ -94,6 +94,11 @@ header {
     min-width: auto !important;
 }
 
+.header-buttons svg {
+    width: 18px;
+    height: 18px;
+}
+
 h1 {
     font-size: clamp(2rem, 6vw, 2.8rem);
     font-weight: 800;
@@ -195,4 +200,13 @@ h1 {
 .privacy-notice svg {
     color: var(--success);
     flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+}
+
+.feature-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--apple-blue);
+    margin-bottom: 0.5rem;
 }

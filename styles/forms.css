@@ -49,6 +49,11 @@
     cursor: pointer;
 }
 
+.modal-close svg {
+    width: 24px;
+    height: 24px;
+}
+
 #reader-frame {
     display: block;
     width: 100%;
@@ -148,6 +153,11 @@ input[type="text"]:focus {
     height: 64px;
     color: var(--primary);
     margin-bottom: 1rem;
+}
+
+.drop-zone .upload-icon {
+    width: 64px;
+    height: 64px;
 }
 
 .drop-zone p {

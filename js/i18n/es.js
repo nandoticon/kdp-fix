@@ -19,6 +19,8 @@ export default {
         download_all: 'Descargar todo como ZIP',
         clear_results: 'Limpiar resultados',
         results_cleared: 'Resultados limpiados; los datos de los libros se liberaron de la memoria.',
+        change_language: 'Cambiar idioma',
+        toggle_theme: 'Cambiar tema claro u oscuro',
         edit_meta: 'Editar Metadados',
         preview: 'Vista previa',
         save: 'Guardar',

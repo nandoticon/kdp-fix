@@ -18,16 +18,32 @@ export function setModalState(modalId, open) {
 }
 
 export function refreshIcons() {
-  if (window.lucide) window.lucide.createIcons();
+  if (!window.lucide) {
+    console.warn('Lucide icons are unavailable; check the icon library connection.');
+    return;
+  }
+  window.lucide.createIcons();
 }
 
-function createButton(label, className, action) {
+function createButton(label, iconName, className, action) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = className;
-  button.textContent = label;
+  const icon = document.createElement('i');
+  icon.setAttribute('data-lucide', iconName);
+  icon.setAttribute('aria-hidden', 'true');
+  const text = document.createElement('span');
+  text.textContent = label;
+  button.append(icon, text);
   button.addEventListener('click', action);
   return button;
+}
+
+function appendIcon(element, iconName) {
+  const icon = document.createElement('i');
+  icon.setAttribute('data-lucide', iconName);
+  icon.setAttribute('aria-hidden', 'true');
+  element.appendChild(icon);
 }
 
 export function buildOutputCard({ epub, filename, t, onCoverChange, onEdit, onPreview, onDownload }) {
@@ -61,7 +77,8 @@ export function buildOutputCard({ epub, filename, t, onCoverChange, onEdit, onPr
     image.alt = t('cover_image');
     coverButton.appendChild(image);
   } else {
-    coverButton.textContent = t('no_cover');
+    appendIcon(coverButton, 'image-off');
+    coverButton.appendChild(document.createTextNode(t('no_cover')));
   }
   coverContainer.appendChild(coverButton);
 
@@ -77,7 +94,7 @@ export function buildOutputCard({ epub, filename, t, onCoverChange, onEdit, onPr
   }
   coverInfo.appendChild(metaInfo);
 
-  const icons = { applied: 'check-circle', verified: 'circle-check', warning: 'alert-triangle', skipped: 'minus-circle' };
+  const icons = { applied: 'circle-check', verified: 'badge-check', warning: 'triangle-alert', skipped: 'circle-minus' };
   const checklist = document.createElement('ul');
   checklist.className = 'optimization-checklist';
   for (const optimization of epub.optimizations) {
@@ -101,9 +118,9 @@ export function buildOutputCard({ epub, filename, t, onCoverChange, onEdit, onPr
   const actions = document.createElement('div');
   actions.className = 'result-actions';
   actions.append(
-    createButton(t('edit_meta'), 'dl-btn btn-secondary', onEdit),
-    createButton(t('preview'), 'dl-btn btn-secondary', onPreview),
-    createButton(t('download'), 'dl-btn', onDownload)
+    createButton(t('edit_meta'), 'pencil', 'dl-btn btn-secondary', onEdit),
+    createButton(t('preview'), 'book-open', 'dl-btn btn-secondary', onPreview),
+    createButton(t('download'), 'download', 'dl-btn', onDownload)
   );
   card.appendChild(actions);
   return card;
@@ -115,7 +132,10 @@ export function buildErrorCard(name, message, t) {
   card.style.borderColor = '#FF3B30';
   const heading = document.createElement('h3');
   heading.style.color = '#FF3B30';
-  heading.textContent = `❌ ${name}`;
+  const icon = document.createElement('i');
+  icon.setAttribute('data-lucide', 'circle-alert');
+  icon.setAttribute('aria-hidden', 'true');
+  heading.append(icon, document.createTextNode(` ${name}`));
   const detail = document.createElement('p');
   detail.style.color = 'var(--text-secondary)';
   detail.textContent = `${t('err_processing')}: ${message || t('err_unknown')}`;

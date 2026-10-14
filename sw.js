@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kdp-fix-v4';
+const CACHE_NAME = 'kdp-fix-v5';
 const APP_BASE = new URL('.', self.registration.scope);
 const LOCAL_ASSETS = [
     '',
@@ -24,12 +24,17 @@ const LOCAL_ASSETS = [
     'partials/workspace.html',
     'partials/overview.html',
     'partials/modals.html',
-    'manifest.json'
+    'manifest.json',
+    'icons/favicon.svg',
+    'icons/icon-192.png',
+    'icons/icon-512.png',
+    'icons/icon-maskable-512.png',
+    'icons/apple-touch-icon.png'
 ].map(path => new URL(path, APP_BASE).href);
 const EXTERNAL_ASSETS = [
     'https://unpkg.com/@zip.js/zip.js@2.6.12/dist/zip.min.js',
     'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
-    'https://unpkg.com/lucide@latest'
+    'https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js'
 ];
 
 self.addEventListener('install', event => {

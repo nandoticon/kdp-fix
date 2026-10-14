@@ -6,8 +6,12 @@
                     <p class="subtitle" data-i18n="subtitle">Premium E-book Optimization Tool</p>
                 </div>
                 <div class="header-buttons">
-                    <button id="lang-toggle" class="dl-btn btn-secondary">EN / PT / ES</button>
-                    <button id="theme-toggle" class="dl-btn btn-secondary">🌓</button>
+                    <button id="lang-toggle" class="dl-btn btn-secondary" data-i18n-aria-label="change_language" data-i18n-title="change_language">
+                        <i data-lucide="languages" aria-hidden="true"></i><span>EN / PT / ES</span>
+                    </button>
+                    <button id="theme-toggle" class="dl-btn btn-secondary" data-i18n-aria-label="toggle_theme" data-i18n-title="toggle_theme">
+                        <i id="theme-icon" data-lucide="moon" aria-hidden="true"></i>
+                    </button>
                 </div>
             </div>
             <p class="description" data-i18n="description">
@@ -18,11 +22,7 @@
 
         <!-- PRIVACY NOTICE -->
         <div class="privacy-notice">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
+            <i data-lucide="shield-check" aria-hidden="true"></i>
             <span><strong data-i18n="privacy_label">Privacy:</strong> <span data-i18n="privacy_text">All processing
                     happens in your browser. Your files are never uploaded.</span></span>
         </div>

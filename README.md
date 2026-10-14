@@ -15,6 +15,8 @@ A browser-based tool for checking and repairing EPUBs for Amazon Send to Kindle.
 - Explicitly clear processed books and release their in-memory data when finished.
 - Validate replacement cover image contents rather than trusting the selected file's extension.
 - English, Portuguese, and Spanish UI; light/dark themes; installable PWA support.
+- Local SVG/PNG favicon, Apple touch icon, and installable PWA icons cached for offline use.
+- Lucide icons identify interface actions and optimization statuses; the Lucide runtime is version-pinned and cached by the service worker.
 
 Language detection is intentionally conservative: when the package language is missing or invalid, the tool reports that it could not confidently identify the language rather than guessing and changing the book metadata. Missing image descriptions are reported without adding generic, misleading alt text. Chapter splitting and Kindle PageFlip metadata are not implemented and are reported as skipped.
 
