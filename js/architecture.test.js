@@ -53,6 +53,7 @@ test('optional converter health requests bypass service-worker caching', async (
     const partials = await readFile(new URL('../partials/workspace.html', import.meta.url), 'utf8');
     const converter = await readFile(new URL('../backend/server.py', import.meta.url), 'utf8');
     const dockerfile = await readFile(new URL('../Dockerfile.vercel', import.meta.url), 'utf8');
+    const vercelConfig = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
 
     assert.match(serviceWorker, /pathname\.startsWith\(converterApiPath\)\) return/);
     assert.match(checker, /cache:\s*'no-store'/);
@@ -64,6 +65,9 @@ test('optional converter health requests bypass service-worker caching', async (
     assert.match(converter, /\/api\/converter\/health/);
     assert.match(converter, /\/api\/converter\/convert/);
     assert.match(dockerfile, /apt-get install .*calibre/s);
+    assert.equal(vercelConfig.services.app.runtime, 'container');
+    assert.equal(vercelConfig.services.app.entrypoint, 'Dockerfile.vercel');
+    assert.equal(vercelConfig.rewrites[0].destination.service, 'app');
     assert.ok(serviceWorker.includes("'js/converter-availability.js'"), 'Converter status module is not cached offline');
     assert.match(app, /void showConverterAvailability\(/, 'Converter status check must not block EPUB app startup');
 });

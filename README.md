@@ -52,7 +52,7 @@ python -m unittest discover -s backend -p "test_*.py"
 - `js/app.js` coordinates file processing and user actions; `js/ui.js` renders statuses and result cards.
 - `js/preview.js` builds the sandboxed EPUB preview; `js/epub-engine.js` and `js/utils.js` contain EPUB handling.
 - `js/converter-availability.js` checks the optional Vercel converter separately; `backend/` contains the Calibre-backed conversion service and request validation (KFX is out of scope).
-- `Dockerfile.vercel` packages the static app and converter service in a Vercel Container Function.
+- `Dockerfile.vercel` packages the static app and converter service in a Vercel Container Function; `vercel.json` routes the deployment through that service.
 - `js/constants.js` assembles the English, Portuguese, and Spanish dictionaries from `js/i18n/`.
 - `styles.css` loads the focused stylesheets in `styles/`.
 - `index.html` is the page shell; `partials/` contains its UI sections, assembled by `js/bootstrap.js`.
