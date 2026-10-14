@@ -82,3 +82,19 @@ test('light theme defines readable controls and inputs instead of retaining dark
     assert.match(formStyles, /input\[type="text"\][^{]*\{[^}]*color:\s*var\(--input-text\)/s);
     assert.match(resultStyles, /\.dl-btn\.btn-secondary\s*\{[^}]*color:\s*var\(--text-primary\)/s);
 });
+
+test('converter settings use the app glass-card form system and responsive disclosure', async () => {
+    const formStyles = await readFile(new URL('../styles/forms.css', import.meta.url), 'utf8');
+    const workspace = await readFile(new URL('../partials/workspace.html', import.meta.url), 'utf8');
+    const app = await readFile(new URL('./app.js', import.meta.url), 'utf8');
+
+    assert.match(workspace, /class="conversion-controls"/);
+    assert.match(workspace, /id="conversion-options" class="conversion-options" hidden/);
+    assert.match(workspace, /data-lucide="cloud-upload"/);
+    assert.match(formStyles, /\.conversion-controls\s*\{[^}]*background:\s*var\(--apple-glass\)/s);
+    assert.match(formStyles, /\.conversion-select:focus-visible/);
+    assert.match(formStyles, /@media \(max-width:\s*520px\)/);
+    assert.match(formStyles, /\.drop-zone\[aria-disabled="true"\]/);
+    assert.match(app, /conversion_unsupported_files/);
+    assert.match(app, /finally\s*\{[\s\S]*?fileInput\.disabled = false/);
+});

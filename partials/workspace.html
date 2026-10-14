@@ -7,21 +7,40 @@
                 </span>
             </div>
             <div class="conversion-controls">
-                <label for="processing-mode" data-i18n="processing_mode_label">Task</label>
-                <select id="processing-mode">
-                    <option value="repair" data-i18n="repair_mode">Repair EPUB offline</option>
-                    <option value="convert" data-i18n="convert_mode">Convert ebook format (online)</option>
-                </select>
-                <div id="conversion-options" hidden>
-                    <label for="conversion-target" data-i18n="conversion_target_label">Convert to</label>
-                    <select id="conversion-target">
-                        <option value="epub">EPUB</option>
-                        <option value="mobi">MOBI</option>
-                        <option value="azw3">AZW3</option>
-                    </select>
-                    <p class="conversion-upload-notice" data-i18n="conversion_upload_notice">
-                        Conversion uploads the selected book to Vercel for processing. Files up to 4 MiB; temporary files are deleted after conversion.
-                    </p>
+                <div class="conversion-mode-row">
+                    <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+                    <div class="conversion-field">
+                        <label for="processing-mode" data-i18n="processing_mode_label">Task</label>
+                        <div class="conversion-select-wrap">
+                            <select id="processing-mode" class="conversion-select">
+                                <option value="repair" data-i18n="repair_mode">Repair EPUB offline</option>
+                                <option value="convert" data-i18n="convert_mode">Convert ebook format (online)</option>
+                            </select>
+                            <i data-lucide="chevron-down" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </div>
+                <div id="conversion-options" class="conversion-options" hidden>
+                    <div class="conversion-divider"></div>
+                    <div class="conversion-target-row">
+                        <div class="conversion-field">
+                            <label for="conversion-target" data-i18n="conversion_target_label">Convert to</label>
+                            <div class="conversion-select-wrap">
+                                <select id="conversion-target" class="conversion-select">
+                                    <option value="epub">EPUB</option>
+                                    <option value="mobi">MOBI</option>
+                                    <option value="azw3">AZW3</option>
+                                </select>
+                                <i data-lucide="chevron-down" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <p class="conversion-upload-notice">
+                            <i data-lucide="cloud-upload" aria-hidden="true"></i>
+                            <span data-i18n="conversion_upload_notice">
+                                Conversion uploads selected books to Vercel. Input and output are limited to 4 MiB per book, with up to five books per batch; temporary files are deleted after conversion.
+                            </span>
+                        </p>
+                    </div>
                 </div>
             </div>
             <div class="drop-zone" id="drop-zone">

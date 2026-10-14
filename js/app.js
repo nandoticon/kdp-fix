@@ -71,6 +71,7 @@ function updateProcessingMode() {
   conversionOptions.hidden = !converting;
   fileInput.accept = converting ? '.epub,.mobi,.azw3' : '.epub';
   dropZone.querySelector('p').textContent = t(converting ? 'convert_upload' : 'upload');
+  dropZone.dataset.mode = converting ? 'convert' : 'repair';
 }
 
 async function handleFiles(files) {
@@ -217,12 +218,15 @@ async function convertFile(file, target) {
 }
 
 async function handleConversionFiles(files) {
-  const fileArray = Array.from(files).filter(file => /\.(epub|mobi|azw3)$/i.test(file.name));
-  if (!fileArray.length) {
-    setStatus(t('conversion_invalid_file'), 'error');
+  const selectedFiles = Array.from(files);
+  const unsupportedFiles = selectedFiles.filter(file => !/\.(epub|mobi|azw3)$/i.test(file.name));
+  if (!selectedFiles.length) return;
+  if (isProcessing || isDownloadingAll) return;
+  if (unsupportedFiles.length) {
+    setStatus(t('conversion_unsupported_files', unsupportedFiles.length), 'error');
     return;
   }
-  if (isProcessing || isDownloadingAll) return;
+  const fileArray = selectedFiles;
   if (fileArray.length > MAX_CONVERSION_BATCH) {
     setStatus(t('conversion_batch_too_large'), 'error');
     return;
@@ -232,68 +236,76 @@ async function handleConversionFiles(files) {
     return;
   }
 
-  if (!converterAvailable) {
-    converterAvailable = await isConverterAvailable();
-    const statusElement = document.getElementById('conversion-status');
-    statusElement.hidden = converterAvailable;
-    if (!converterAvailable) {
-      statusElement.querySelector('[data-converter-message]').textContent = t('conversion_unavailable');
-      refreshIcons();
-      setStatus(t('conversion_unavailable_action'), 'error');
-      return;
-    }
-  }
-
   isProcessing = true;
   const run = ++processingRun;
   const target = document.getElementById('conversion-target').value;
   fileInput.disabled = true;
+  processingMode.disabled = true;
+  document.getElementById('conversion-target').disabled = true;
   dropZone.setAttribute('aria-disabled', 'true');
-  closeMetadataModal();
-  closeReaderModal();
-  epubInstances.forEach(epub => {
-    if (epub.coverUrl) URL.revokeObjectURL(epub.coverUrl);
-  });
-  convertedFiles.forEach(url => URL.revokeObjectURL(url));
-  epubInstances = [];
-  filenames = [];
-  dlfilenames = [];
-  resultCards = [];
-  convertedFiles = [];
-  outputDiv.replaceChildren();
-  resultsToolbar.style.display = 'none';
-  btnDlAll.style.display = 'none';
-  btnClearResults.style.display = 'none';
-  bulkEditContainer.style.display = 'none';
-
-  setStatus(t('processing'));
   let failureCount = 0;
-  for (let index = 0; index < fileArray.length; index++) {
-    const file = fileArray[index];
-    setStatus(t('conversion_processing', index + 1, undefined, fileArray.length));
-    try {
-      const sourceFormat = file.name.split('.').pop().toLowerCase();
-      if (sourceFormat === target) throw new Error(t('conversion_same_format'));
-      const converted = await convertFile(file, target);
-      if (run !== processingRun) return;
-      const url = URL.createObjectURL(converted.blob);
-      convertedFiles.push(url);
-      const card = buildConvertedFileCard({ filename: converted.name, downloadUrl: url, t });
-      outputDiv.appendChild(card);
-    } catch (error) {
-      console.error('E-book conversion failed:', file.name, error);
-      failureCount++;
-      outputDiv.appendChild(buildConversionErrorCard(file.name, error.message || t('conversion_failed')));
+  try {
+    if (!converterAvailable) {
+      converterAvailable = await isConverterAvailable();
+      const statusElement = document.getElementById('conversion-status');
+      statusElement.hidden = converterAvailable;
+      if (!converterAvailable) {
+        statusElement.querySelector('[data-converter-message]').textContent = t('conversion_unavailable');
+        setStatus(t('conversion_unavailable_action'), 'error');
+        return;
+      }
     }
-  }
 
-  isProcessing = false;
-  fileInput.disabled = false;
-  dropZone.removeAttribute('aria-disabled');
-  refreshIcons();
-  setStatus(failureCount ? t('done_with_errors', fileArray.length, failureCount) : t('conversion_complete'), failureCount ? 'warning' : 'success');
-  resultsToolbar.style.display = 'flex';
-  btnClearResults.style.display = 'inline-flex';
+    closeMetadataModal();
+    closeReaderModal();
+    epubInstances.forEach(epub => {
+      if (epub.coverUrl) URL.revokeObjectURL(epub.coverUrl);
+    });
+    convertedFiles.forEach(url => URL.revokeObjectURL(url));
+    epubInstances = [];
+    filenames = [];
+    dlfilenames = [];
+    resultCards = [];
+    convertedFiles = [];
+    outputDiv.replaceChildren();
+    resultsToolbar.style.display = 'none';
+    btnDlAll.style.display = 'none';
+    btnClearResults.style.display = 'none';
+    bulkEditContainer.style.display = 'none';
+    setStatus(t('processing'));
+
+    for (let index = 0; index < fileArray.length; index++) {
+      const file = fileArray[index];
+      setStatus(t('conversion_processing', index + 1, undefined, fileArray.length));
+      try {
+        const sourceFormat = file.name.split('.').pop().toLowerCase();
+        if (sourceFormat === target) throw new Error(t('conversion_same_format'));
+        const converted = await convertFile(file, target);
+        if (run !== processingRun) return;
+        const url = URL.createObjectURL(converted.blob);
+        convertedFiles.push(url);
+        const card = buildConvertedFileCard({ filename: converted.name, downloadUrl: url, t });
+        outputDiv.appendChild(card);
+      } catch (error) {
+        console.error('E-book conversion failed:', file.name, error);
+        failureCount++;
+        outputDiv.appendChild(buildConversionErrorCard(file.name, error.message || t('conversion_failed')));
+      }
+    }
+    setStatus(failureCount ? t('done_with_errors', fileArray.length, failureCount) : t('conversion_complete'), failureCount ? 'warning' : 'success');
+    resultsToolbar.style.display = 'flex';
+    btnClearResults.style.display = 'inline-flex';
+  } catch (error) {
+    console.error('Conversion batch failed:', error);
+    setStatus(`${t('conversion_failed')}: ${error.message}`, 'error');
+  } finally {
+    isProcessing = false;
+    fileInput.disabled = false;
+    processingMode.disabled = false;
+    document.getElementById('conversion-target').disabled = false;
+    dropZone.removeAttribute('aria-disabled');
+    refreshIcons();
+  }
 }
 
 function clearResults() {
