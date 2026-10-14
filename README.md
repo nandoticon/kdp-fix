@@ -17,6 +17,7 @@ A browser-based tool for checking and repairing EPUBs for Amazon Send to Kindle.
 - English, Portuguese, and Spanish UI; light/dark themes; installable PWA support.
 - Local SVG/PNG favicon, Apple touch icon, and installable PWA icons cached for offline use.
 - Lucide icons identify interface actions and optimization statuses; the Lucide runtime is version-pinned and cached by the service worker.
+- EPUB repair remains browser-based and available offline. An optional converter health check reports when `/api/converter/health` is absent or unreachable without blocking the repair app.
 
 Language detection is intentionally conservative: when the package language is missing or invalid, the tool reports that it could not confidently identify the language rather than guessing and changing the book metadata. Missing image descriptions are reported without adding generic, misleading alt text. Chapter splitting and Kindle PageFlip metadata are not implemented and are reported as skipped.
 
@@ -42,6 +43,7 @@ npm test
 
 - `js/app.js` coordinates file processing and user actions; `js/ui.js` renders statuses and result cards.
 - `js/preview.js` builds the sandboxed EPUB preview; `js/epub-engine.js` and `js/utils.js` contain EPUB handling.
+- `js/converter-availability.js` checks the optional converter separately; the first planned conversion targets are MOBI and AZW3 (KFX is out of scope).
 - `js/constants.js` assembles the English, Portuguese, and Spanish dictionaries from `js/i18n/`.
 - `styles.css` loads the focused stylesheets in `styles/`.
 - `index.html` is the page shell; `partials/` contains its UI sections, assembled by `js/bootstrap.js`.

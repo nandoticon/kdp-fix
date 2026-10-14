@@ -21,6 +21,7 @@ export default {
         results_cleared: 'Resultados limpos; os dados dos livros foram liberados da memória.',
         change_language: 'Alterar idioma',
         toggle_theme: 'Alternar tema claro ou escuro',
+        conversion_unavailable: 'A conversão opcional não está disponível agora. O reparo de EPUB continua funcionando offline.',
         edit_meta: 'Editar Metadados',
         preview: 'Pré-visualização',
         save: 'Salvar',

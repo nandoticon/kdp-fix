@@ -1,5 +1,11 @@
         <!-- UPLOAD SECTION -->
         <section class="upload-section">
+            <div id="conversion-status" class="conversion-status" role="status" aria-live="polite" hidden>
+                <i data-lucide="cloud-off" aria-hidden="true"></i>
+                <span data-converter-message data-i18n="conversion_unavailable">
+                    Optional conversion is unavailable right now. EPUB repair still works offline.
+                </span>
+            </div>
             <div class="drop-zone" id="drop-zone">
                 <i class="upload-icon" data-lucide="cloud-upload" aria-hidden="true"></i>
                 <p data-i18n="upload">Drag & Drop EPUB files here</p>

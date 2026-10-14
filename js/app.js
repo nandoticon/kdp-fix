@@ -2,6 +2,7 @@ import { EPUBBook } from './epub-engine.js';
 import { I18N } from './constants.js';
 import { buildErrorCard as renderErrorCard, buildOutputCard, refreshIcons, setModalState, setStatus as updateStatus } from './ui.js';
 import { makePreviewDocument } from './preview.js';
+import { showConverterAvailability } from './converter-availability.js';
 
 let currentLang = ['en', 'pt', 'es'].includes(localStorage.getItem('kdp_lang'))
   ? localStorage.getItem('kdp_lang')
@@ -376,3 +377,8 @@ if (localStorage.getItem('kdp_theme') === 'light') {
 }
 applyI18N();
 refreshIcons();
+void showConverterAvailability({
+  t,
+  refreshIcons,
+  statusElement: document.getElementById('conversion-status')
+});

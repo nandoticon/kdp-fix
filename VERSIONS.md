@@ -6,6 +6,7 @@
 - Correct the wide-screen layout so the status, controls, and results flow together in one results panel.
 - Reject unsupported or malformed text encodings instead of silently falling back to UTF-8 and altering book content.
 - Validate cover image signatures and reject file types that do not match their contents.
+- Keep EPUB repair independent of the optional conversion service; report converter unavailability without blocking offline repair.
 - Add regression coverage for strict encoding and image-signature validation.
 
 ## v2.1 — October 14, 2026

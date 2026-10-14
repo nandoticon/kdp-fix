@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kdp-fix-v5';
+const CACHE_NAME = 'kdp-fix-v6';
 const APP_BASE = new URL('.', self.registration.scope);
 const LOCAL_ASSETS = [
     '',
@@ -14,6 +14,7 @@ const LOCAL_ASSETS = [
     'js/app.js',
     'js/ui.js',
     'js/preview.js',
+    'js/converter-availability.js',
     'js/constants.js',
     'js/i18n/en.js',
     'js/i18n/pt.js',
@@ -61,6 +62,9 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
+    const requestUrl = new URL(event.request.url);
+    const converterApiPath = new URL('api/converter/', APP_BASE).pathname;
+    if (requestUrl.origin === APP_BASE.origin && requestUrl.pathname.startsWith(converterApiPath)) return;
 
     event.respondWith((async () => {
         const cached = await caches.match(event.request);

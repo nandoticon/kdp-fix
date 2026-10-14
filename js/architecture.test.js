@@ -45,3 +45,18 @@ test('favicon and installable app icons are local assets', async () => {
     }
     assert.ok(manifest.icons.some(icon => icon.purpose === 'maskable'), 'Expected a dedicated maskable icon');
 });
+
+test('optional converter health requests bypass service-worker caching', async () => {
+    const serviceWorker = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
+    const checker = await readFile(new URL('./converter-availability.js', import.meta.url), 'utf8');
+    const app = await readFile(new URL('./app.js', import.meta.url), 'utf8');
+    const partials = await readFile(new URL('../partials/workspace.html', import.meta.url), 'utf8');
+
+    assert.match(serviceWorker, /pathname\.startsWith\(converterApiPath\)\) return/);
+    assert.match(checker, /cache:\s*'no-store'/);
+    assert.match(app, /showConverterAvailability\(/);
+    assert.match(partials, /id="conversion-status"/);
+    assert.match(partials, /EPUB repair still works offline/);
+    assert.ok(serviceWorker.includes("'js/converter-availability.js'"), 'Converter status module is not cached offline');
+    assert.match(app, /void showConverterAvailability\(/, 'Converter status check must not block EPUB app startup');
+});
